@@ -32,6 +32,8 @@ app.use("/dev/api/v1/education", require("./routes/education"));
 app.use("/dev/api/v1/post", require("./routes/post"));
 app.use("/dev/api/v1/article", require("./routes/article"));
 app.use("/dev/api/v1/connection", require("./routes/connection"));
+app.use("/dev/api/v1/conversations", require("./routes/conversations"));
+app.use("/dev/api/v1/messages", require("./routes/messages"));
 
 //Catching 404 Error
 app.use((req, res, next) => {
@@ -53,12 +55,15 @@ app.use((error, req, res, next) => {
 const PORT = process.env.PORT || 4000;
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/vichayan", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
-  })
+  .connect(
+    "mongodb+srv://testuser:testuser@practeeusers.iwbdk.mongodb.net/vichayan?retryWrites=true&w=majority",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    }
+  )
   .then(() => {
     console.log("server Started");
     app.listen(PORT);
