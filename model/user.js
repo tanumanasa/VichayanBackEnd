@@ -75,6 +75,18 @@ const userSchema = new Schema({
     type: Number,
     default: 0,
   },
+  followers: {
+    type: Array,
+    default: [],
+  },
+  followings: {
+    type: Array,
+    default: [],
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("user", userSchema);

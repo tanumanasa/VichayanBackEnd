@@ -32,6 +32,8 @@ app.use("/dev/api/v1/education", require("./routes/education"));
 app.use("/dev/api/v1/post", require("./routes/post"));
 app.use("/dev/api/v1/article", require("./routes/article"));
 app.use("/dev/api/v1/connection", require("./routes/connection"));
+app.use("/dev/api/v1/conversations", require("./routes/conversations"));
+app.use("/dev/api/v1/messages", require("./routes/messages"));
 
 //Catching 404 Error
 app.use((req, res, next) => {
