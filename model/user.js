@@ -16,7 +16,6 @@ const userSchema = new Schema({
   },
   isThirdPartyUser: {
     type: Boolean,
-    required: true,
   },
   isEmailVerified: {
     type: Boolean,

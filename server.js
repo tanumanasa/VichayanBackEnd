@@ -52,21 +52,21 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 mongoose
-  .connect(
-    "mongodb+srv://testuser:testuser@practeeusers.iwbdk.mongodb.net/vichayan?retryWrites=true&w=majority",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
-    }
-  )
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
   .then(() => {
-    console.log("server Started");
-    app.listen(PORT);
+    console.log("DB connected ");
+    app.listen(PORT, () => {
+      console.log(`Server is Running at port ${PORT}`);
+    });
+    // console.log("Server started on port " + `${PORT}`);
   })
   .catch((err) => {
     console.log("Error in connecting to DataBase", err.message);

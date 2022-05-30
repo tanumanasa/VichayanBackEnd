@@ -3,8 +3,9 @@ const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 const { getSignedUrl } = require("../utils/s3");
 
-//SEND GRID
+//SEND Email
 const sendGrid = require("../utils/sendgrid");
+// const sendEmail = require("../utils/sendEmail");
 
 //Models
 const User = require("../model/user");
@@ -16,47 +17,61 @@ module.exports = {
   userRegister: async (req, res, next) => {
     try {
       let errors = {};
-      const { name, email, password, phoneNumber, isThirdPartyUser } = req.body;
+      const { name, email, password, phoneNumber } = req.body;
+      // const { name, email, password, phoneNumber } = req.body;
       const user = await User.findOne({ email });
       if (user) {
         errors.email = "Email already exist";
         return res.status(400).json(errors);
       }
+      // console.log("1");
+
       let hashedPassword;
       hashedPassword = await bcrypt.hash(password, 8);
-      // let {sequence} = await User.findOne().sort({createdAt: -1}).select('sequence')
-      sequence = req.body.sequence + 1;
+      // console.log("1");
+      // let { sequence } = await User.findOne()
+      //   .sort({ createdAt: -1 })
+      //   .select("sequence");
+      // sequence = sequence + 1;
       //GENERATE OTP
       const OTP = Math.floor(100000 + Math.random() * 900000);
-      const body = `Hi Here is OTP ${OTP} for email verification`;
-      const emailReq = {
-        recieverMail: email,
-        subject: "Email Verification",
-        html: body,
-      };
+      // console.log("2");
+
       const newUser = await new User({
         name,
         email,
         password: hashedPassword,
-        isThirdPartyUser,
+        // isThirdPartyUser,
         phoneNumber,
-        sequence,
+        // sequence,
         otp: OTP,
         isEmailVerified: false,
       });
       await newUser.save();
-      // await sendGrid.sendMail(emailReq)
+      console.log(newUser);
+      // const body = `Hi Here is OTP ${OTP} for email verification`;
+      // const emailReq = {
+      //   recieverMail: email,
+      //   subject: "Email Verification",
+      //   html: body,
+      // };
+      // await sendGrid.sendMail(emailReq);
+
       //SEND MAIL TO USER FOR EMAIL VERIFICATION
+      const message = `
+        <h1>Email verificatoin </h1>
+        <p>Please verify your email to continue</p>
+        <p>Here is OTP:  ${OTP} for verification</p>
+      `;
+      await sendGrid({
+        to: email,
+        subject: "Email verification",
+        text: message,
+      });
       res.status(200).json({
         message: "User registerd successfully, kindly verify your mail",
         success: true,
-        response: {
-          _id: newUser._id,
-          name: newUser.name,
-          phoneNumber: newUser.phoneNumber,
-          sequence: newUser.sequence,
-          isEmailVerified: newUser.isEmailVerified,
-        },
+        email: newUser.email,
       });
     } catch (error) {
       return res.status(500).json({
@@ -75,9 +90,9 @@ module.exports = {
           .status(400)
           .json({ success: false, message: "Email does not exist" });
       }
-      if (user.otp !== verificationCode) {
+      if (user.otp !== Number(verificationCode)) {
         return res
-          .status(400)
+          .status(401)
           .json({ success: false, message: "Invalid verification code" });
       }
       user.isEmailVerified = true;
@@ -107,43 +122,33 @@ module.exports = {
         errors.password = "Invalid Credentials";
         return res.status(404).json(errors);
       }
-      const { _id, name, phoneNumber } = user;
-      const payload = {
-        _id,
-        name,
-        phoneNumber,
-        email,
-      };
-      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
-        res.json({
-          message: "User logged in successfully",
-          success: true,
-          token: "Bearer " + token,
-        });
+      const OTP = Math.floor(100000 + Math.random() * 900000);
+      //SEND MAIL TO USER FOR EMAIL VERIFICATION
+      const message = `
+        <h1>Login OTP Verificatoin </h1>
+        <p>Please verify your email to continue</p>
+        <p>Here is OTP:  ${OTP} for login</p>
+      `;
+      await sendGrid({
+        to: email,
+        subject: "Email verification",
+        text: message,
+      });
+      //   await sendGrid.sendMail(emailReq);
+      // const user = await User.findOne({ email });
+      user.otp = Number(OTP);
+      console.log(OTP);
+      await user.save();
+      res.status(201).json({
+        message: `User logged in and otp sent to ${email}`,
+        success: true,
+        email: user.email,
       });
     } catch (err) {
-      return res
-        .status(400)
-        .json({ message: `Error in userLogin ${err.message}` });
+      return res.status(400).json({ message: `Error in login ${err.message}` });
     }
   },
-  deleteUser: async (req, res, next) => {
-    try {
-      const { _id } = req.user;
-      const user = await User.findByIdAndDelete(_id);
-      return res.status(200).json({
-        success: true,
-        message: "User deleted successfully",
-        response: user._id,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-        error: error.message,
-      });
-    }
-  },
+
   sendOTP: async (req, res, next) => {
     try {
       const { email } = req.body;
@@ -153,15 +158,21 @@ module.exports = {
           .json({ success: false, message: "Fields are empty" });
       }
       const OTP = Math.floor(100000 + Math.random() * 900000);
-      const body = `Hi Here is OTP ${OTP} for reset password`;
-      const emailReq = {
-        recieverMail: email,
-        subject: "Reset Paasword",
-        html: body,
-      };
-      await sendGrid.sendMail(emailReq);
+      //SEND MAIL TO USER FOR EMAIL VERIFICATION
+      const message = `
+        <h1>Email Verificatoin </h1>
+        <p>Please verify your email to continue</p>
+        <p>Here is OTP:  ${OTP} for verification</p>
+      `;
+      await sendGrid({
+        to: email,
+        subject: "Email verification",
+        text: message,
+      });
+      //   await sendGrid.sendMail(emailReq);
       const user = await User.findOne({ email });
       user.otp = Number(OTP);
+      console.log(OTP);
       await user.save();
       return res.status(200).json({
         success: true,
@@ -175,14 +186,15 @@ module.exports = {
       });
     }
   },
-  verifyOTP: async (req, res, next) => {
+
+  verifyOTP: async (req, res) => {
     try {
-      const { email, otp, newPassword } = req.body;
-      if (!newPassword || !otp || !email) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Fields are empty" });
-      }
+      const { email, otp } = req.body;
+      // if (!newPassword || !otp || !email) {
+      //   return res
+      //     .status(404)
+      //     .json({ success: false, message: "Fields are empty" });
+      // }
       const user = await User.findOne({ email });
       if (!user) {
         return res
@@ -197,15 +209,46 @@ module.exports = {
       if (user.otp !== Number(otp)) {
         return res.status(400).json({ success: false, message: "Invalid OTP" });
       }
-      let hashedPassword;
-      hashedPassword = await bcrypt.hash(newPassword, 10);
-      user.password = hashedPassword;
-      user.otp = -1;
-      await user.save();
+      const payload = {
+        email,
+      };
+      // console.log(_id);
+      // console.log(user);
+      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
+        res.json({
+          message: "Otp verified",
+          success: true,
+          // token: "Bearer " + token,
+          token: token,
+          userInfo: user,
+        });
+      });
+      // let hashedPassword;
+      // hashedPassword = await bcrypt.hash(newPassword, 10);
+      // user.password = hashedPassword;
+      // user.otp = -1;
+      // await user.save();
+      // return res.status(200).json({
+      //   success: true,
+      //   message: "Password has been change successfully",
+      //   response: user,
+      // });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+  deleteUser: async (req, res, next) => {
+    try {
+      const { _id } = req.user;
+      const user = await User.findByIdAndDelete(_id);
       return res.status(200).json({
         success: true,
-        message: "Password has been change successfully",
-        response: user,
+        message: "User deleted successfully",
+        response: user._id,
       });
     } catch (error) {
       return res.status(500).json({
