@@ -2,15 +2,23 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 
 const connectionSchema = new Schema({
-    user1:{
+    createdBy:{
         type: Schema.Types.ObjectId,
         ref:'user',
         index:true
     },
-    user2:{
+    recievedBy:{
         type: Schema.Types.ObjectId,
         ref:'user',
         index:true
+    },
+    status :{
+        type: String,
+        default: 'sent' 
+    },
+    isDeleted :{
+        type: Boolean,
+        default: false 
     },
     createdAt:{
         type: Date,
