@@ -10,17 +10,19 @@ const sendConnectionRequest = async (req, res, next) => {
         const { id } = req.params
         const senderId = req.user._id
         //Check whether connection already exist or not
-        const isConnectionExist = await Connection.findOne({ $or: [{ user1: ObjectId(senderId) }, { user2: ObjectId(senderId) }] })
+        let isConnectionExist = await Connection.findOne({ $and: [{ createdBy: ObjectId(senderId) }, { recievedBy: ObjectId(id) }] })
         if (isConnectionExist) {
             //Return connection already exist
             return res.status(409).json({ message: "Connection already exist", success: false, response: {} })
         }
-        const isAlreadySent = await ConnectionRequest.findOne({ $and: [{ sender: ObjectId(senderId) }, { receiver: ObjectId(id) }] })
-        if (isAlreadySent) {
-            //Return connectionRequest already exist
-            return res.status(409).json({ message: "Connection already sent", success: false, response: {} })
+
+        isConnectionExist = await Connection.findOne({ $and: [{ recievedBy: ObjectId(senderId) }, { createdBy: ObjectId(id) }] })
+        if (isConnectionExist) {
+            //Return connection already exist
+            return res.status(409).json({ message: "Connection already exist", success: false, response: {} })
         }
-        const newConnectionRequest = await new ConnectionRequest({
+
+        const newConnectionRequest = await new Connection({
             sender: ObjectId(senderId),
             receiver: ObjectId(id),
             status: "sent"
@@ -37,28 +39,17 @@ const acceptConnectionRequest = async (req, res, next) => {
     try {
         const { id } = req.params
         const receiverId = req.user._id
-        const isConnectionExist = await Connection.findOne({ $or: [{ user1: ObjectId(receiverId) }, { user2: ObjectId(receiverId) }] })
-        if (isConnectionExist) {
-            //Return connection already exist
-            return res.status(409).json({ message: "Connection already exist", success: false, response: {} })
-        }
-        const connectionRequest = await ConnectionRequest.findById(ObjectId(id))
+
+        const connectionRequest = await Connection.findById(ObjectId(id))
         //Validate connectionRequest
-        if (connectionRequest && connectionRequest.receiver.toString() == receiverId.toString()) {
-            connectionRequest.status = 'received'
+        if (connectionRequest && connectionRequest.recievedBy.toString() == receiverId.toString()) {
+            connectionRequest.status = 'accepted'
             await connectionRequest.save()
         }
         else {
             return res.status(400).json({ success: false, message: "Invalid Request" })
         }
-        //Create new Connection
-        const newConnection = await new Connection({
-            user1: connectionRequest.sender,
-            user2: connectionRequest.receiver
-        })
-        await newConnection.save()
-        //Delete connectionRequest 
-        await ConnectionRequest.findByIdAndDelete(ObjectId(id))
+
         return res.status(200).json({ message: "Connection request accepted successfully", success: true, response: newConnection })
     }
     catch (error) {
@@ -69,9 +60,26 @@ const acceptConnectionRequest = async (req, res, next) => {
 
 const getAllConnections = async (req, res, next) => {
     try {
-        const { id } = req.params
-        const connections = await Connection.find({ $or: [{ user1: ObjectId(id) }, { user2: ObjectId(id) }]}).populate('user1 user2')
+        const { id } = req.user._id
+        const connections = await Connection.find({ $and: [
+            { $or: [{ createdBy: ObjectId(id) }, { recievedBy: ObjectId(id) }]},
+            { status: 'accepted' }
+        ]}).populate('createdBy recievedBy')
         return res.status(200).json({ message: `${connections.length} connections found`, success: true, response:connections })
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message})
+    }
+}
+
+const getAllConnectionRequest = async (req, res, next) => {
+    try {
+        const { id } = req.user._id
+        const connections = await Connection.find({ $and: [
+            { $or: [{ recievedBy: ObjectId(id) }]},
+            { status: 'sent' }
+        ]}).populate('createdBy recievedBy')
+        return res.status(200).json({ message: `${connections.length} connections Recieved`, success: true, response:connections })
     }
     catch (error) {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message})
@@ -81,12 +89,13 @@ const getAllConnections = async (req, res, next) => {
 const ignoreConnectionRequest = async (req, res, next) => {
     try {
         const { id } = req.params
-        const connectionRequest = await ConnectionRequest.findById(ObjectId(id))
-        console.log("connectionRequest", connectionRequest)
+        const receiverId = req.user._id
+        
+        const connectionRequest = await Connection.findById(ObjectId(id))
         if (!connectionRequest){
             return res.status(400).json({ message: "Invalid Connection", success: false, response: {}})
         }
-        if (connectionRequest.receiver.toString() != req.user._id.toString()){
+        if (connectionRequest.receiver.toString() != receiverId.toString()){
             return res.status(400).json({ message: "Invalid Request", success: false, response: {}})
         }
         connectionRequest.status = 'ignored'
@@ -102,5 +111,6 @@ module.exports = {
     sendConnectionRequest,
     acceptConnectionRequest,
     getAllConnections,
+    getAllConnectionRequest,
     ignoreConnectionRequest
 }
