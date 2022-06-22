@@ -3,7 +3,6 @@ const { ObjectId } = require('mongodb')
 //Models
 const User = require('../model/user')
 const Connection = require('../model/connection')
-const ConnectionRequest = require('../model/connectionRequest')
 
 const sendConnectionRequest = async (req, res, next) => {
     try {
@@ -100,7 +99,7 @@ const ignoreConnectionRequest = async (req, res, next) => {
         }
         connectionRequest.status = 'ignored'
         await connectionRequest.save()
-        return res.status(200).json({ message: "Connection ignored successfully", success: true, response: connectionRequest })
+        return res.status(200).json({ message: "Connection ignored successfully", success: true })
     }
     catch (error) {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message })

@@ -196,6 +196,7 @@ module.exports = {
       //     .json({ success: false, message: "Fields are empty" });
       // }
       const user = await User.findOne({ email });
+      console.log(user)
       if (!user) {
         return res
           .status(404)
