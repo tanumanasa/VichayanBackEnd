@@ -27,7 +27,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 app.get("/", (req, res) => {
-  return res.status(200).json({ message: "Welcome to Vichayan dev" });
+  return res.status(200).json({ message: "Welcome to Vichayan dev db" });
 });
 
 //ROUTES
@@ -66,9 +66,8 @@ app.use((error, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 mongoose
-  .connect(process.env.MONGO_URL, {
+  .connect("mongodb://10.0.1.156:27017/vichayan", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
@@ -76,6 +75,16 @@ mongoose
   })
   .then(() => {
     console.log("DB connected ");
+
+// mongoose
+//   .connect(process.env.MONGO_URL, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//     useCreateIndex: true,
+//     useFindAndModify: false,
+//   })
+//   .then(() => {
+//     console.log("DB connected ");
 
 
   /** Create HTTP server. */
