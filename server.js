@@ -27,7 +27,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 app.get("/", (req, res) => {
-  return res.status(200).json({ message: "Welcome to Vichayan" });
+  return res.status(200).json({ message: "Welcome to Vichayan dev" });
 });
 
 //ROUTES
