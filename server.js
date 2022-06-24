@@ -1,7 +1,12 @@
+const http = require("http");
 const express = require("express");
 const mongoose = require("mongoose");
 const passport = require("passport");
 const cors = require("cors");
+const socketio = require("socket.io");
+
+// socket configuration
+const { webSockets } = require("./utils/websockets");
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -71,10 +76,19 @@ mongoose
   })
   .then(() => {
     console.log("DB connected ");
-    app.listen(PORT, () => {
-      console.log(`Server is Running at port ${PORT}`);
-    });
-    // console.log("Server started on port " + `${PORT}`);
+
+
+  /** Create HTTP server. */
+  const server = http.createServer(app);
+
+  /** Create socket connection */
+  global.io = socketio.listen(server);
+  global.io.on('connection', webSockets.connection)
+  console.log("WebSockets connected ");
+
+  server.listen(PORT, () => {
+    console.log(`Server is Running at port ${PORT}`);
+  });
   })
   .catch((err) => {
     console.log("Error in connecting to DataBase", err.message);
