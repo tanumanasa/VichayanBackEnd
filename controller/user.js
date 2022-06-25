@@ -4,7 +4,7 @@ const { ObjectId } = require("mongodb");
 const { getSignedUrl } = require("../utils/s3");
 
 //SEND Email
-const sendGrid = require("../utils/sendgrid");
+const { sendGrid } = require("../utils/sendgrid");
 // const sendEmail = require("../utils/sendEmail");
 
 //Models

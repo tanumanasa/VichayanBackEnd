@@ -48,21 +48,19 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config({ path: "./.env" });
 
-const sendEmail = (options) => {
+const sendGrid = (options) => {
   const transporter = nodemailer.createTransport({
-    // host: 'smtp.gmail.com',
-    // port: 993,
-    // host: 'smtp.ethereal.email',
-    // port: 587,
-    service: "gmail",
+    host: "smtp.sendgrid.net",
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASS,
-    },
+      user: 'apikey',
+      pass: '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',
+  }
   });
 
   const mailOptions = {
-    from: process.env.EMAIL,
+    from: 'no-reply@langwayz.games',
     to: options.to,
     subject: options.subject,
     html: options.text,
@@ -76,4 +74,7 @@ const sendEmail = (options) => {
   });
 };
 
-module.exports = sendEmail;
+module.exports = 
+{
+  sendGrid
+};
