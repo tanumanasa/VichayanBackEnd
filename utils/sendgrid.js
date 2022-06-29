@@ -1,37 +1,59 @@
 const AWS = require('aws-sdk');
 
-const SES_CONFIG = {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
+//configuring region for aws 
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: 'us-east-1',
-};
+    region: 'us-west-2'
+});
 
-const AWS_SES = new AWS.SES(SES_CONFIG);
-
+//configuring parameters 
 const sendGrid = (options) => {
-    let params = {
-      Source: process.env.EMAIL,
+  const params = {
       Destination: {
-        ToAddresses: [
-          options.to
-        ],
+          ToAddresses: [
+            options.to
+          ]
       },
-      ReplyToAddresses: [],
       Message: {
-        Body: {
-          Html: {
-            Charset: 'UTF-8',
-            Data: options.text,
+          Body: {
+              Html: {
+                  Charset: "UTF-8",
+                  Data: options.text,
+              }
           },
-        },
-        Subject: {
-          Charset: 'UTF-8',
-          Data: options.subject,
-        }
+          Subject: {
+              Charset: "UTF-8",
+              Data: "Verification OTP"
+          }
       },
-    };
-    return AWS_SES.sendEmail(params).promise();
-};
+      Source: process.env.EMAIL,
+      ReplyToAddresses: [
+          process.env.REPLY_TO
+      ],
+  };
+
+  console.log(JSON.stringify(params));
+
+  //creating promise for sending Email
+
+  const sendPromise = new AWS.SES({
+      apiVersion: '2010-12-01'
+  }).sendEmail(params).promise();
+
+  // handling promise when rejected 
+
+  sendPromise.then(
+      function(data) {
+          console.log(data.MessageId);
+      }
+  ).catch(
+      function(err) {
+          console.error(err, err.stack);
+      }
+  );
+
+}
 
 module.exports = 
 {
