@@ -97,9 +97,19 @@ module.exports = {
       }
       user.isEmailVerified = true;
       await user.save();
-      return res
-        .status(200)
-        .json({ success: true, message: "Email verified successfully" });
+      const payload = {
+        email,
+        _id: user._id
+      };
+      user.password = null;
+      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
+        res.json({
+          message: "Email verified successfully",
+          success: true,
+          token: token,
+          userInfo: user,
+        });
+      });
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -210,12 +220,11 @@ module.exports = {
       if (user.otp !== Number(otp)) {
         return res.status(400).json({ success: false, message: "Invalid OTP" });
       }
+      user.password = null;
       const payload = {
         email,
         _id: user._id
       };
-      // console.log(_id);
-      // console.log(user);
       jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
         res.json({
           message: "Otp verified",
@@ -225,16 +234,6 @@ module.exports = {
           userInfo: user,
         });
       });
-      // let hashedPassword;
-      // hashedPassword = await bcrypt.hash(newPassword, 10);
-      // user.password = hashedPassword;
-      // user.otp = -1;
-      // await user.save();
-      // return res.status(200).json({
-      //   success: true,
-      //   message: "Password has been change successfully",
-      //   response: user,
-      // });
     } catch (error) {
       return res.status(500).json({
         success: false,
