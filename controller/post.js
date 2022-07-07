@@ -18,6 +18,7 @@ module.exports = {
       console.log("req.body");
       if (req.files.images && req.files.images.length > 0) {
         for (var i = 0; i < req.files.images.length; i++) {
+          console.log(req.files.images[i]);
           let url = getSignedUrl(req.files.images[i].key);
           images.push({
             id: uuidv4(),
@@ -354,18 +355,6 @@ module.exports = {
       const { id } = req.params;
       const { _id } = req.user;
       const { comment } = req.body;
-      const isExist = await Comment.findOne({
-        $and: [{ postId: id }, { comment }],
-      });
-      if (isExist) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: "Comment already exist",
-            response: {},
-          });
-      }
       const newComment = await new Comment({
         comment,
         postId: id,
