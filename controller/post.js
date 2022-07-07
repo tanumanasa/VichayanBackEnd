@@ -15,10 +15,8 @@ module.exports = {
       const { _id } = req.user;
       let images = [];
       let docs = [];
-      console.log("req.body");
       if (req.files.images && req.files.images.length > 0) {
         for (var i = 0; i < req.files.images.length; i++) {
-          console.log(req.files.images[i]);
           let url = getSignedUrl(req.files.images[i].key);
           images.push({
             id: uuidv4(),
@@ -53,8 +51,6 @@ module.exports = {
       //1- if already exist map post with given id
       //2- else create new tag and then map
       const { tags = [] } = req.body;
-      console.log(tags)
-      console.log("test")
       for (var k = 0; k < tags.length; k++) {
         const _tag = await Tag.findOne({ tagName: tags[k] });
         if (_tag) {
@@ -80,7 +76,6 @@ module.exports = {
           await newTagpostmapping.save();
         }
       }
-      console.log("test");
       return res
         .status(200)
         .json({
