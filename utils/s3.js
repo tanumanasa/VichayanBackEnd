@@ -26,7 +26,8 @@ const getSignedUrl = (key) => {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: key
   })
-  return url
+  const myArray = url.split("?");
+  return myArray[0]
 
 }
 
