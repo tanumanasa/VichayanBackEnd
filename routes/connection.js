@@ -7,6 +7,7 @@ const {
     sendConnectionRequest, 
     acceptConnectionRequest,
     ignoreConnectionRequest,
+    getAllConnectionSend,
     getAllConnectionRequest
 } = require('../controller/connection')
 
@@ -22,6 +23,9 @@ router.put('/accept/:id', passport.authenticate('jwt', { session: false }), acce
 
 //GET ALL CONNECTION REQUEST
 router.get('/request', passport.authenticate('jwt', { session: false }), getAllConnectionRequest)
+
+//GET ALL CONNECTION REQUEST SEND
+router.get('/sent', passport.authenticate('jwt', { session: false }), getAllConnectionSend)
 
 //IGNORE CONNECTION REQUEST
 router.put('/ignore/:id', passport.authenticate('jwt', { session: false }), ignoreConnectionRequest)
