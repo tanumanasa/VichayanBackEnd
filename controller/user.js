@@ -1,3 +1,4 @@
+const url = require('url');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
@@ -372,6 +373,26 @@ module.exports = {
       return res
         .status(200)
         .json({ success: true, message: "User found", response: user });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+  getAllUser: async (req, res, next) => {
+    try {
+      const queryObject = url.parse(req.url, true).query;
+      const user = await User.find(queryObject, {password:0, otp:0});
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found", response: {} });
+      }
+      return res
+        .status(200)
+        .json({ success: true, message: "User List", response: user });
     } catch (error) {
       return res.status(500).json({
         success: false,

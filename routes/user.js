@@ -15,6 +15,7 @@ const {
   updateBackgroundPicture,
   fetchUserFromGoogle,
   getUser,
+  getAllUser,
   updateUser,
   searchUserByName,
 } = require("../controller/user");
@@ -46,6 +47,13 @@ router.get(
   "/single/:id",
   passport.authenticate("jwt", { session: false }),
   getUser
+);
+
+//GET USER BY ID
+router.get(
+  "/all",
+  passport.authenticate("jwt", { session: false }),
+  getAllUser
 );
 
 //UPDATE USER

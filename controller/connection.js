@@ -85,6 +85,20 @@ const getAllConnectionRequest = async (req, res, next) => {
     }
 }
 
+const getAllConnectionSend = async (req, res, next) => {
+    try {
+        const { id } = req.user._id
+        const connections = await Connection.find({ $and: [
+            { $or: [{ createdBy: ObjectId(id) }]},
+            { status: 'sent' }
+        ]}).populate('createdBy recievedBy')
+        return res.status(200).json({ message: `${connections.length} connections Recieved`, success: true, response:connections })
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message})
+    }
+}
+
 const ignoreConnectionRequest = async (req, res, next) => {
     try {
         const { id } = req.params
@@ -111,5 +125,6 @@ module.exports = {
     acceptConnectionRequest,
     getAllConnections,
     getAllConnectionRequest,
-    ignoreConnectionRequest
+    getAllConnectionSend,
+    ignoreConnectionRequest,
 }
