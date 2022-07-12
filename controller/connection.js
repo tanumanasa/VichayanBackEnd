@@ -22,8 +22,8 @@ const sendConnectionRequest = async (req, res, next) => {
         }
 
         const newConnectionRequest = await new Connection({
-            sender: ObjectId(senderId),
-            receiver: ObjectId(id),
+            createdBy: ObjectId(senderId),
+            recievedBy: ObjectId(id),
             status: "sent"
         })
         await newConnectionRequest.save()
@@ -92,7 +92,7 @@ const getAllConnectionSend = async (req, res, next) => {
             { $or: [{ createdBy: ObjectId(id) }]},
             { status: 'sent' }
         ]}).populate('createdBy recievedBy')
-        return res.status(200).json({ message: `${connections.length} connections Recieved`, success: true, response:connections })
+        return res.status(200).json({ message: `${connections.length} connections Sent`, success: true, response:connections })
     }
     catch (error) {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message})
