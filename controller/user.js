@@ -383,7 +383,14 @@ module.exports = {
   },
   getAllUser: async (req, res, next) => {
     try {
-      const queryObject = url.parse(req.url, true).query;
+      const { _id } = req.user;
+      const userId = {_id: {$nin: [_id]} }
+      const queryParams = url.parse(req.url, true).query;
+
+      const queryObject = {
+        ...userId,
+        ...queryParams
+    };
       const user = await User.find(queryObject, {password:0, otp:0});
       if (!user) {
         return res
