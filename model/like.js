@@ -5,6 +5,7 @@ const { Schema } = mongoose
 const likeSchema = new Schema({
     postId:{
         type: String,
+        ref: 'post',
         index:true
     },
     createdBy:{
