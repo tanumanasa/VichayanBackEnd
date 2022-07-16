@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require("uuid");
 const Tag = require("../model/tag");
 const Tagpostmapping = require("../model/tagpostmapping");
 const Connection = require("../model/connection");
+const Notification = require("../model/notification");
 
 module.exports = {
   createPost: async (req, res, next) => {
@@ -47,6 +48,27 @@ module.exports = {
         createdBy: _id,
       });
       await post.save();
+
+      const connections = await Connection.find({ $and: [
+        { $or: [{ createdBy: ObjectId(_id) }, { recievedBy: ObjectId(_id) }]},
+        { status: 'accepted' }
+    ]})
+
+    await asyncForEach(connections, async (connection) => {
+
+      const userId = _id.toString() === connection.createdBy.toString() ? connection.recievedBy : connection.createdBy;
+
+      const newNotificationRequest = await new Notification({
+        type: "postCreated",
+        message: "Created a post",
+        userId: ObjectId(userId),
+        createdBy: ObjectId(_id)
+    })
+
+    await newNotificationRequest.save()
+      
+    });
+
       //GET ALL TAGS
       //1- if already exist map post with given id
       //2- else create new tag and then map
@@ -270,7 +292,7 @@ module.exports = {
       const { _id } = req.user;
       const like = await Like.findOne({
         $and: [{ createdBy: _id }, { postId: id }],
-      });
+      }).populate('postId');
       if (like) {
         await Like.findByIdAndDelete(like._id);
         return res
@@ -284,8 +306,20 @@ module.exports = {
       const newLike = await new Like({
         postId: id,
         createdBy: _id,
-      });
+      })
       await newLike.save();
+
+      const userId = like.postId.createdBy;
+
+      const newNotificationRequest = await new Notification({
+        type: "postLiked",
+        message: "Liked a post",
+        userId: ObjectId(userId),
+        createdBy: ObjectId(_id)
+    })
+
+    await newNotificationRequest.save()
+      
       return res
         .status(200)
         .json({
@@ -356,6 +390,18 @@ module.exports = {
         createdBy: _id,
       });
       await newComment.save();
+
+      const post = await Post.findById(id);
+      const userId = post.createdBy;
+
+      const newNotificationRequest = await new Notification({
+        type: "postComented",
+        message: "Comented a post",
+        userId: ObjectId(userId),
+        createdBy: ObjectId(_id)
+    })
+
+    await newNotificationRequest.save();
       return res
         .status(200)
         .json({
@@ -635,3 +681,10 @@ module.exports = {
     }
   },
 };
+
+async function asyncForEach(array, callback) {
+	for (let index = 0; index < array.length; index += 1) {
+		// eslint-disable-next-line no-await-in-loop
+		await callback(array[index], index, array);
+	}
+}

@@ -3,6 +3,7 @@ const { ObjectId } = require('mongodb')
 //Models
 const User = require('../model/user')
 const Connection = require('../model/connection')
+const Notification = require('../model/notification')
 
 const sendConnectionRequest = async (req, res, next) => {
     try {
@@ -27,6 +28,15 @@ const sendConnectionRequest = async (req, res, next) => {
             status: "sent"
         })
         await newConnectionRequest.save()
+
+        const newNotificationRequest = await new Notification({
+            type: "ConnectionRecieved",
+            message: "Send you connection Request",
+            userId: ObjectId(id),
+            createdBy: ObjectId(senderId)
+        })
+
+        await newNotificationRequest.save()
         return res.status(200).json({ message: "Connection sent successfully", success: true, response: newConnectionRequest })
     }
     catch (error) {
@@ -44,12 +54,21 @@ const acceptConnectionRequest = async (req, res, next) => {
         if (connectionRequest && connectionRequest.recievedBy.toString() == receiverId.toString()) {
             connectionRequest.status = 'accepted'
             await connectionRequest.save()
+
+            const newNotificationRequest = await new Notification({
+                type: "ConnectionAccept",
+                message: "Accepted your connection Request",
+                userId: ObjectId(id),
+                createdBy: ObjectId(receiverId)
+            })
+    
+            await newNotificationRequest.save()
         }
         else {
             return res.status(400).json({ success: false, message: "Invalid Request" })
         }
 
-        return res.status(200).json({ message: "Connection request accepted successfully", success: true, response: newConnection })
+        return res.status(200).json({ message: "Connection request accepted successfully", success: true, response: {} })
     }
     catch (error) {
         console.log("Error",error)
