@@ -145,7 +145,7 @@ module.exports = {
   getPosts: async (req, res, next) => {
     try {
       const { _id } = req.user;
-      const posts = await Post.find({ createdBy: ObjectId(_id) });
+      const posts = await Post.find({ createdBy: ObjectId(_id) }).populate('createdBy');
       return res
         .status(200)
         .json({
@@ -309,7 +309,8 @@ module.exports = {
       })
       await newLike.save();
 
-      const userId = like.postId.createdBy;
+      const post = await Post.findById(id);
+      const userId = post.createdBy;
 
       const newNotificationRequest = await new Notification({
         type: "postLiked",
