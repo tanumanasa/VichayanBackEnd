@@ -133,27 +133,17 @@ module.exports = {
         errors.password = "Invalid Credentials";
         return res.status(404).json(errors);
       }
-      const OTP = Math.floor(100000 + Math.random() * 900000);
-      //SEND MAIL TO USER FOR EMAIL VERIFICATION
-      const message = `
-        <h1>Login OTP Verificatoin </h1>
-        <p>Please verify your email to continue</p>
-        <p>Here is OTP:  ${OTP} for login</p>
-      `;
-      await sendGrid({
-        to: email,
-        subject: "Email verification",
-        text: message,
-      });
-      //   await sendGrid.sendMail(emailReq);
-      // const user = await User.findOne({ email });
-      user.otp = Number(OTP);
-      console.log(OTP);
-      await user.save();
-      res.status(201).json({
-        message: `User logged in and otp sent to ${email}`,
-        success: true,
-        email: user.email,
+      const payload = {
+        email,
+        _id: user._id
+      }
+      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
+        res.json({
+          message: "User Logged in successfully",
+          success: true,
+          token: token,
+          userInfo: user,
+        });
       });
     } catch (err) {
       return res.status(400).json({ message: `Error in login ${err.message}` });
