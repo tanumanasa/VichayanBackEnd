@@ -681,6 +681,26 @@ module.exports = {
         });
     }
   },
+  setPrivacy: async (req, res) => {
+    try {
+      const {id} = req.params;
+      const {privacy} = req.body;
+      const post = await Post.findOneAndUpdate({_id:id, createdBy:req.user.id}, {privacy}, {new: true});
+      return res.status(200).json({
+        success: true,
+        message: "Post privacy upadated",
+        response: post
+      })
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal Server Error",
+          error: error.message,
+        });
+    }
+  }
 };
 
 async function asyncForEach(array, callback) {

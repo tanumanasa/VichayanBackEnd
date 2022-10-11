@@ -10,7 +10,7 @@ const postSchema = new Schema({
     websitesLink:[],
     privacy:{
         type: String,
-        enum:["private", "public", "connections"]
+        enum:['private', 'public', 'connections']
     },
     createdBy:{
         type: Schema.Types.ObjectId,
@@ -20,7 +20,7 @@ const postSchema = new Schema({
         type: Date,
         default: Date.now 
     }
-},{strict:false})
+}/*,{strict:false}*/)
 
 module.exports = mongoose.model('post', postSchema)
 

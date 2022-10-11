@@ -22,6 +22,7 @@ const {
   deleteReply,
   repliesOnComment,
   getrepliesOnComment,
+  setPrivacy,
 } = require("../controller/post");
 
 //CREATE POST
@@ -149,5 +150,12 @@ router.delete(
   passport.authenticate("jwt", { session: false }),
   deleteReply
 );
+
+//UPDATE privacy
+router.put(
+  "/privacy/:id",
+  passport.authenticate("jwt", { session: false }),
+  setPrivacy
+)
 
 module.exports = router;
