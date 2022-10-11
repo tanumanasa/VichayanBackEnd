@@ -263,7 +263,7 @@ module.exports = {
       }
       let hashedPassword;
       hashedPassword = await bcrypt.hash(newPassword, 15);
-      user.newPassword = hashedPassword;
+      user.password = hashedPassword;
       await user.save();
       return res
         .status(200)
