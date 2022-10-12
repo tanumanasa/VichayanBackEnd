@@ -23,6 +23,8 @@ const {
   repliesOnComment,
   getrepliesOnComment,
   setPrivacy,
+  updateComment,
+  getCommentsCountOnPost,
 } = require("../controller/post");
 
 //CREATE POST
@@ -92,6 +94,21 @@ router.get(
   getCommentsOnPost
 );
 
+//GET COMMENT COUNT ON POST
+router.get(
+  "/commentcount/:id",
+  passport.authenticate("jwt", { session: false }),
+  getCommentsCountOnPost
+);
+
+
+//UPDATE COMMENT ON POST
+router.put(
+  "/comment/:id",
+  passport.authenticate("jwt", { session: false}),
+  updateComment
+)
+
 //DELETE COMMENT
 router.delete(
   "/comment/:id",
@@ -137,7 +154,7 @@ router.post(
   repliesOnComment
 );
 
-//GET reply on a post
+//GET reply on a comment
 router.get(
   "/reply/:id",
   passport.authenticate("jwt", { session: false }),
