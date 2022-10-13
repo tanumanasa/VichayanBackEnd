@@ -8,7 +8,9 @@ const {
     acceptConnectionRequest,
     ignoreConnectionRequest,
     getAllConnectionSend,
-    getAllConnectionRequest
+    getAllConnectionRequest,
+    blockConnection,
+    unblockConnection
 } = require('../controller/connection')
 
 
@@ -29,6 +31,12 @@ router.get('/sent', passport.authenticate('jwt', { session: false }), getAllConn
 
 //IGNORE CONNECTION REQUEST
 router.put('/ignore/:id', passport.authenticate('jwt', { session: false }), ignoreConnectionRequest)
+
+//BLOCK CONNECTION
+router.put('/block/:id', passport.authenticate('jwt', {session: false}), blockConnection);
+
+//UNBLOCK CONNECTION
+router.delete('/unblock/:id', passport.authenticate("jwt", {session: false}), unblockConnection);
 
 
 module.exports = router
