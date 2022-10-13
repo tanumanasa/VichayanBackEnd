@@ -88,6 +88,9 @@ const userSchema = new Schema({
     type: Array,
     default: [],
   },
+  interests: [{
+    type: String
+  }],
   isAdmin: {
     type: Boolean,
     default: false,

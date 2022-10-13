@@ -18,6 +18,8 @@ const {
   getAllUser,
   updateUser,
   searchUserByName,
+  addInterests,
+  removeInterests,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -97,5 +99,17 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   searchUserByName
 );
+
+router.post(
+  "/interests",
+  passport.authenticate("jwt", {session:false}),
+  addInterests
+)
+
+router.delete(
+  "/interests",
+  passport.authenticate("jwt", {session:false}),
+  removeInterests
+)
 
 module.exports = router;
