@@ -10,6 +10,7 @@ const { sendGrid } = require("../utils/sendgrid");
 
 //Models
 const User = require("../model/user");
+const Follow = require('../model/follow');
 
 //Config
 const keys = require("../config/keys");
@@ -487,6 +488,60 @@ module.exports = {
           message: "Internal server error",
           error: error.message
         })
+    }
+  },
+  setPremium: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const user = await User.findByIdAndUpdate(_id, {isPremium: true}, {new: true});
+      return res.status(200).json({
+        success: true,
+        message: "Set premium successfully",
+        response: user
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success:false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  },
+  followUser: async(req, res) => {
+    try {
+      const {_id} = req.user;
+      const {id} = req.params;
+      const user = await User.findById(id);
+      if(!user){
+        return res.status(404).json({
+          success:false,
+          message: "User not found",
+          response: {}
+        })
+      }
+      if(!(user.isPremium)){
+        return res.status(400).json({
+          success: false,
+          message: "User does not have premium",
+          response: {}
+        })
+      }
+      const follow = new Follow({
+        userId: id,
+        createdBy: _id
+      });
+      await follow.save();
+      return res.status(200).json({
+        success: true,
+        message: "Followed user successfully",
+        response: follow
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
     }
   }
 };

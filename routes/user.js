@@ -20,6 +20,8 @@ const {
   searchUserByName,
   addInterests,
   removeInterests,
+  setPremium,
+  followUser,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -100,16 +102,33 @@ router.get(
   searchUserByName
 );
 
+
+//add Interests
 router.post(
   "/interests",
   passport.authenticate("jwt", {session:false}),
   addInterests
 )
 
+//remove Interests
 router.delete(
   "/interests",
   passport.authenticate("jwt", {session:false}),
   removeInterests
+)
+
+//set premium
+router.put(
+  "/premium",
+  passport.authenticate("jwt", {session: false}),
+  setPremium
+)
+
+//follow user
+router.post(
+  "/follow/:id",
+  passport.authenticate("jwt",{session: false}),
+  followUser
 )
 
 module.exports = router;
