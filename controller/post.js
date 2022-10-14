@@ -782,8 +782,8 @@ module.exports = {
         createdBy: _id
       });
       await newReport.save();
-      post.reportCount = post.reportCount + 1;
-      await post.save();
+      // post.reportCount = post.reportCount + 1;
+      // await post.save();
       // if(post.reportCount >= 10){
       //   console.log("way too many reports, gotta take it down");
       //   await Post.findByIdAndDelete(id);
@@ -794,7 +794,7 @@ module.exports = {
       return res.status(200).json({
         success: true,
         message: "Post reported successfully",
-        response: post
+        response: newReport
       });
     } catch (error) {
       return res.status(500).json({
