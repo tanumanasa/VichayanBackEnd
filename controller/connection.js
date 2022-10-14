@@ -180,7 +180,6 @@ const unblockConnection = async(req, res) => {
                 response: {}
             })
         }
-        console.log(connection);
         return res.status(200).json({
             success: true,
             message: "User unblocked successfully",

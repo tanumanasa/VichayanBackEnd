@@ -447,6 +447,14 @@ module.exports = {
       });
     }
   },
+  fetchInterests: async(req, res) => {
+    const interests = ["Programming", "Javascript", "Android", "Backend Development", "Frontend Developmen", "Software Engineering"];
+    return res.status(200).json({
+      success: true,
+      message: "Interests fetched",
+      response: interests
+    })
+  },
   addInterests: async (req, res) => {
     try {
       const { _id } = req.user;
@@ -535,6 +543,29 @@ module.exports = {
         success: true,
         message: "Followed user successfully",
         response: follow
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  },
+  syncContacts: async(req, res) => {
+    try {
+      const {contacts} = req.body;
+      let present = [], notPresent = [];
+      const existingUsers = await User.find({phoneNumber: {$in: contacts}});
+      existingUsers.forEach(user => present.push(user.phoneNumber));
+      notPresent = contacts.filter(phoneNumber => !present.includes(phoneNumber));
+      return res.status(200).json({
+        success: true,
+        message: "Contacts synced",
+        response: {
+          present,
+          notPresent
+        }
       });
     } catch (error) {
       return res.status(500).json({

@@ -22,6 +22,8 @@ const {
   removeInterests,
   setPremium,
   followUser,
+  fetchInterests,
+  syncContacts,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -102,6 +104,13 @@ router.get(
   searchUserByName
 );
 
+//fetch all available interests
+router.get(
+  "/interests",
+  passport.authenticate("jwt", {session: false}),
+  fetchInterests
+)
+
 
 //add Interests
 router.post(
@@ -129,6 +138,13 @@ router.post(
   "/follow/:id",
   passport.authenticate("jwt",{session: false}),
   followUser
+)
+
+//sync contacts
+router.post(
+  '/sync',
+  passport.authenticate("jwt", {session: false}),
+  syncContacts
 )
 
 module.exports = router;
