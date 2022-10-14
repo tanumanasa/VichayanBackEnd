@@ -9,6 +9,7 @@ const Tag = require("../model/tag");
 const Tagpostmapping = require("../model/tagpostmapping");
 const Connection = require("../model/connection");
 const Notification = require("../model/notification");
+const Report = require("../model/report");
 
 module.exports = {
   createPost: async (req, res) => {
@@ -734,6 +735,7 @@ module.exports = {
         });
     }
   },
+  //set privacy of a post
   setPrivacy: async (req, res) => {
     try {
       const { id } = req.params;
@@ -752,6 +754,54 @@ module.exports = {
           message: "Internal Server Error",
           error: error.message,
         });
+    }
+  },
+  //report a post
+  reportPost: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const {id} = req.params;
+      const post = await Post.findById(id);
+      if(!post){
+        return res.status(404).json({
+          success: false,
+          message: "Post not found",
+          response: {}
+        });
+      }
+      const reported = await Report.findOne({postId: id, createdBy: _id});
+      if(reported){
+        return res.status(400).json({
+          success: false,
+          message: "You have already reported this post",
+          response: {}
+        });
+      }
+      const newReport = new Report({
+        postId: id,
+        createdBy: _id
+      });
+      await newReport.save();
+      post.reportCount = post.reportCount + 1;
+      await post.save();
+      // if(post.reportCount >= 10){
+      //   console.log("way too many reports, gotta take it down");
+      //   await Post.findByIdAndDelete(id);
+        //you can't just delete a post and leave all its related stuff like files and images linked with it, delete them too
+      //   await Report.deleteMany({postId: id});
+      //   console.log(postToTakeDown);
+      // }
+      return res.status(200).json({
+        success: true,
+        message: "Post reported successfully",
+        response: post
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
     }
   }
 };

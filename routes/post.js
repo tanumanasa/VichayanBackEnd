@@ -25,6 +25,7 @@ const {
   setPrivacy,
   updateComment,
   getCommentsCountOnPost,
+  reportPost,
 } = require("../controller/post");
 
 //CREATE POST
@@ -173,6 +174,13 @@ router.put(
   "/privacy/:id",
   passport.authenticate("jwt", { session: false }),
   setPrivacy
+)
+
+//REPORT post
+router.put(
+  '/report/:id',
+  passport.authenticate("jwt", {session: false}),
+  reportPost
 )
 
 module.exports = router;
