@@ -10,6 +10,7 @@ const { sendGrid } = require("../utils/sendgrid");
 
 //Models
 const User = require("../model/user");
+const Follow = require('../model/follow');
 
 //Config
 const keys = require("../config/keys");
@@ -446,4 +447,132 @@ module.exports = {
       });
     }
   },
+  fetchInterests: async(req, res) => {
+    const interests = ["Programming", "Javascript", "Android", "Backend Development", "Frontend Developmen", "Software Engineering"];
+    return res.status(200).json({
+      success: true,
+      message: "Interests fetched",
+      response: interests
+    })
+  },
+  addInterests: async (req, res) => {
+    try {
+      const { _id } = req.user;
+      const { interests } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { interests: { $each: interests } } }, { new: true }).select('interests');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Interests added",
+          response: result
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  removeInterests: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const {interests} = req.body;
+      const result = await User.findByIdAndUpdate(_id, {$pull: {interests: {$in: interests}}}, {new:true}).select('interests');
+      return res.status(200).json({
+        success: true,
+        message: "Interests removed",
+        response: result
+      })
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  setPremium: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const user = await User.findByIdAndUpdate(_id, {isPremium: true}, {new: true});
+      return res.status(200).json({
+        success: true,
+        message: "Set premium successfully",
+        response: user
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success:false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  },
+  followUser: async(req, res) => {
+    try {
+      const {_id} = req.user;
+      const {id} = req.params;
+      const user = await User.findById(id);
+      if(!user){
+        return res.status(404).json({
+          success:false,
+          message: "User not found",
+          response: {}
+        })
+      }
+      if(!(user.isPremium)){
+        return res.status(400).json({
+          success: false,
+          message: "User does not have premium",
+          response: {}
+        })
+      }
+      const follow = new Follow({
+        userId: id,
+        createdBy: _id
+      });
+      await follow.save();
+      return res.status(200).json({
+        success: true,
+        message: "Followed user successfully",
+        response: follow
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  },
+  syncContacts: async(req, res) => {
+    try {
+      const {contacts} = req.body;
+      let present = [], notPresent = [];
+      const existingUsers = await User.find({phoneNumber: {$in: contacts}});
+      existingUsers.forEach(user => present.push(user.phoneNumber));
+      notPresent = contacts.filter(phoneNumber => !present.includes(phoneNumber));
+      return res.status(200).json({
+        success: true,
+        message: "Contacts synced",
+        response: {
+          present,
+          notPresent
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  }
 };

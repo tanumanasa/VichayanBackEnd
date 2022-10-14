@@ -44,7 +44,7 @@ const deleteFileFromS3 = (req, cb) => {
           error: err
         }
       })
-      console.log(err, err.stack); // an error occurred
+      console.log("error while deleting !!!!\n", err); // an error occurred
     }
     else {
       cb(() => {

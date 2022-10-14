@@ -88,10 +88,17 @@ const userSchema = new Schema({
     type: Array,
     default: [],
   },
+  interests: [{
+    type: String
+  }],
   isAdmin: {
     type: Boolean,
     default: false,
   },
+  isPremium: {
+    type: Boolean,
+    default: false
+  }
 });
 
 module.exports = mongoose.model("user", userSchema);

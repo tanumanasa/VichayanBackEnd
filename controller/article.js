@@ -7,15 +7,17 @@ module.exports = {
         try {
             const { id } = req.user
             let images = []
-            if (req.files.images.length > 0) {
-                for (var i = 0; i < req.files.images.length; i++) {
-                    let url = getSignedUrl(req.files.images[i].key)
-                    images.push({
-                        id:uuidv4(),
-                        originalname: req.files.images[i].originalname,
-                        url:url,
-                        key: req.files.images[i].key
-                    })
+            if(req.file){                
+                if (req.files.images.length > 0) {
+                    for (var i = 0; i < req.files.images.length; i++) {
+                        let url = getSignedUrl(req.files.images[i].key)
+                        images.push({
+                            id:uuidv4(),
+                            originalname: req.files.images[i].originalname,
+                            url:url,
+                            key: req.files.images[i].key
+                        })
+                    }
                 }
             }
             const { text, link } = req.body

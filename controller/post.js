@@ -9,9 +9,10 @@ const Tag = require("../model/tag");
 const Tagpostmapping = require("../model/tagpostmapping");
 const Connection = require("../model/connection");
 const Notification = require("../model/notification");
+const Report = require("../model/report");
 
 module.exports = {
-  createPost: async (req, res, next) => {
+  createPost: async (req, res) => {
     try {
       const { _id } = req.user;
       let images = [];
@@ -39,7 +40,7 @@ module.exports = {
         }
       }
       const { text, websitesLink, privacy } = req.body;
-      const post = await new Post({
+      const post = new Post({
         text,
         images,
         docs,
@@ -49,25 +50,27 @@ module.exports = {
       });
       await post.save();
 
-      const connections = await Connection.find({ $and: [
-        { $or: [{ createdBy: ObjectId(_id) }, { recievedBy: ObjectId(_id) }]},
-        { status: 'accepted' }
-    ]})
+      const connections = await Connection.find({
+        $and: [
+          { $or: [{ createdBy: ObjectId(_id) }, { recievedBy: ObjectId(_id) }] },
+          { status: 'accepted' }
+        ]
+      })
 
-    await asyncForEach(connections, async (connection) => {
+      await asyncForEach(connections, async (connection) => {
 
-      const userId = _id.toString() === connection.createdBy.toString() ? connection.recievedBy : connection.createdBy;
+        const userId = _id.toString() === connection.createdBy.toString() ? connection.recievedBy : connection.createdBy;
 
-      const newNotificationRequest = await new Notification({
-        type: "postCreated",
-        message: "Created a post",
-        userId: ObjectId(userId),
-        createdBy: ObjectId(_id)
-    })
+        const newNotificationRequest = new Notification({
+          type: "postCreated",
+          message: "Created a post",
+          userId: ObjectId(userId),
+          createdBy: ObjectId(_id)
+        })
 
-    await newNotificationRequest.save()
-      
-    });
+        await newNotificationRequest.save()
+
+      });
 
       //GET ALL TAGS
       //1- if already exist map post with given id
@@ -116,7 +119,7 @@ module.exports = {
         });
     }
   },
-  getPost: async (req, res, next) => {
+  getPost: async (req, res) => {
     try {
       const { id } = req.params;
       const post = await Post.findById(id);
@@ -142,7 +145,7 @@ module.exports = {
         });
     }
   },
-  getPosts: async (req, res, next) => {
+  getPosts: async (req, res) => {
     try {
       const { _id } = req.user;
       const posts = await Post.find({ createdBy: ObjectId(_id) }).populate('createdBy');
@@ -163,7 +166,7 @@ module.exports = {
         });
     }
   },
-  updatePost: async (req, res, next) => {
+  updatePost: async (req, res) => {
     try {
       const { id } = req.params;
       let images = [];
@@ -238,7 +241,7 @@ module.exports = {
         });
     }
   },
-  deletePost: async (req, res, next) => {
+  deletePost: async (req, res) => {
     try {
       const { id } = req.params;
       const post = await Post.findByIdAndDelete(id);
@@ -286,7 +289,7 @@ module.exports = {
         });
     }
   },
-  likeUnlikePost: async (req, res, next) => {
+  likeUnlikePost: async (req, res) => {
     try {
       const { id } = req.params;
       const { _id } = req.user;
@@ -317,10 +320,10 @@ module.exports = {
         message: "Liked a post",
         userId: ObjectId(userId),
         createdBy: ObjectId(_id)
-    })
+      })
 
-    await newNotificationRequest.save()
-      
+      await newNotificationRequest.save()
+
       return res
         .status(200)
         .json({
@@ -338,7 +341,7 @@ module.exports = {
         });
     }
   },
-  getLikesOnPost: async (req, res, next) => {
+  getLikesOnPost: async (req, res) => {
     try {
       const { id } = req.params;
       const likes = await Like.find({ postId: id });
@@ -359,7 +362,7 @@ module.exports = {
         });
     }
   },
-  getCommentsOnPost: async (req, res, next) => {
+  getCommentsOnPost: async (req, res) => {
     try {
       const { id } = req.params;
       const comments = await Comment.find({ postId: id });
@@ -380,7 +383,31 @@ module.exports = {
         });
     }
   },
-  commentOnPost: async (req, res, next) => {
+  getCommentsCountOnPost: async (req, res) => {
+    try {
+      const {id} = req.params;
+      const count = await Comment.countDocuments({postId: id});
+      console.log("🚀 ~ file: post.js ~ line 389 ~ getCommentsCountOnPost: ~ count", count)
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: `${count} comments on given post`,
+          response: {
+            count
+          }
+        })
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal Server Error",
+          error: error.message,
+        });
+    }
+  },
+  commentOnPost: async (req, res) => {
     try {
       const { id } = req.params;
       const { _id } = req.user;
@@ -396,13 +423,13 @@ module.exports = {
       const userId = post.createdBy;
 
       const newNotificationRequest = await new Notification({
-        type: "postComented",
+        type: "postCommented",
         message: "Comented a post",
         userId: ObjectId(userId),
         createdBy: ObjectId(_id)
-    })
+      })
 
-    await newNotificationRequest.save();
+      await newNotificationRequest.save();
       return res
         .status(200)
         .json({
@@ -420,7 +447,7 @@ module.exports = {
         });
     }
   },
-  deleteComment: async (req, res, next) => {
+  deleteComment: async (req, res) => {
     try {
       const { _id } = req.user;
       const { id } = req.params;
@@ -447,7 +474,35 @@ module.exports = {
         });
     }
   },
-  mostLikedPost: async (req, res, next) => {
+  updateComment: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const {id} = req.params;
+      const {comment} = req.body;
+      const newComment = await Comment.findByIdAndUpdate(id, {comment}, {new: true});
+      if(!newComment){
+        return res
+        .status(404)
+        .json({ success: false, message: "Invalid id", response: {} });
+      }
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Comment updated successfully",
+          response: newComment,
+        });
+    } catch (error) {
+      return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+  mostLikedPost: async (req, res) => {
     try {
       let pipeline = [
         {
@@ -476,7 +531,7 @@ module.exports = {
         });
     }
   },
-  getAllPostOfaTag: async (req, res, next) => {
+  getAllPostOfaTag: async (req, res) => {
     try {
       const { id } = req.params;
       const posts = await Tagpostmapping.find({ tagId: ObjectId(id) }).populate(
@@ -500,7 +555,7 @@ module.exports = {
         });
     }
   },
-  getAllPostofMultipleTags: async (req, res, next) => {
+  getAllPostofMultipleTags: async (req, res) => {
     try {
       let { tags } = req.body;
       const posts = await Tagpostmapping.find({
@@ -523,7 +578,7 @@ module.exports = {
         });
     }
   },
-  getAllTags: async (req, res, next) => {
+  getAllTags: async (req, res) => {
     try {
       const { id } = req.params;
       const tags = await Tag.find({ createdBy: ObjectId(id) });
@@ -544,7 +599,7 @@ module.exports = {
         });
     }
   },
-  getAllPostOfConnections: async (req, res, next) => {
+  getAllPostOfConnections: async (req, res) => {
     try {
       const { _id } = req.user;
       // const _id = "61308dc46f905d4d4c757f5f"
@@ -600,7 +655,7 @@ module.exports = {
     }
   },
   //get reply on  a comment
-  getrepliesOnComment: async (req, res, next) => {
+  getrepliesOnComment: async (req, res) => {
     try {
       const { id } = req.params;
       const replies = await Reply.find({ commentId: id });
@@ -621,9 +676,8 @@ module.exports = {
         });
     }
   },
-
   //do reply on a comment
-  repliesOnComment: async (req, res, next) => {
+  repliesOnComment: async (req, res) => {
     try {
       const { id } = req.params;
       const { _id } = req.user;
@@ -639,7 +693,7 @@ module.exports = {
       return res
         .status(200)
         .json({
-          success: false,
+          success: true,
           message: "Commented successfully",
           response: newReply,
         });
@@ -654,7 +708,7 @@ module.exports = {
     }
   },
   //delete a reply
-  deleteReply: async (req, res, next) => {
+  deleteReply: async (req, res) => {
     try {
       const { _id } = req.user;
       const { id } = req.params;
@@ -668,7 +722,7 @@ module.exports = {
         .status(200)
         .json({
           success: true,
-          message: "Comment deleted successfully",
+          message: "Reply deleted successfully",
           response: reply,
         });
     } catch (error) {
@@ -681,11 +735,12 @@ module.exports = {
         });
     }
   },
+  //set privacy of a post
   setPrivacy: async (req, res) => {
     try {
-      const {id} = req.params;
-      const {privacy} = req.body;
-      const post = await Post.findOneAndUpdate({_id:id, createdBy:req.user.id}, {privacy}, {new: true});
+      const { id } = req.params;
+      const { privacy } = req.body;
+      const post = await Post.findOneAndUpdate({ _id: id, createdBy: req.user.id }, { privacy }, { new: true });
       return res.status(200).json({
         success: true,
         message: "Post privacy upadated",
@@ -700,12 +755,60 @@ module.exports = {
           error: error.message,
         });
     }
+  },
+  //report a post
+  reportPost: async (req, res) => {
+    try {
+      const {_id} = req.user;
+      const {id} = req.params;
+      const post = await Post.findById(id);
+      if(!post){
+        return res.status(404).json({
+          success: false,
+          message: "Post not found",
+          response: {}
+        });
+      }
+      const reported = await Report.findOne({postId: id, createdBy: _id});
+      if(reported){
+        return res.status(400).json({
+          success: false,
+          message: "You have already reported this post",
+          response: {}
+        });
+      }
+      const newReport = new Report({
+        postId: id,
+        createdBy: _id
+      });
+      await newReport.save();
+      // post.reportCount = post.reportCount + 1;
+      // await post.save();
+      // if(post.reportCount >= 10){
+      //   console.log("way too many reports, gotta take it down");
+      //   await Post.findByIdAndDelete(id);
+        //you can't just delete a post and leave all its related stuff like files and images linked with it, delete them too
+      //   await Report.deleteMany({postId: id});
+      //   console.log(postToTakeDown);
+      // }
+      return res.status(200).json({
+        success: true,
+        message: "Post reported successfully",
+        response: newReport
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
   }
 };
 
 async function asyncForEach(array, callback) {
-	for (let index = 0; index < array.length; index += 1) {
-		// eslint-disable-next-line no-await-in-loop
-		await callback(array[index], index, array);
-	}
+  for (let index = 0; index < array.length; index += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await callback(array[index], index, array);
+  }
 }
