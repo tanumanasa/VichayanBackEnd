@@ -24,6 +24,10 @@ const {
   followUser,
   fetchInterests,
   syncContacts,
+  userLogout,
+  getUserStatus,
+  getAboutProfile,
+  updateAboutProfile,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -34,6 +38,16 @@ router.post("/emailverify", verifyEmail);
 
 // USER LOGIN
 router.post("/login", userLogin);
+
+//USER LOGUT
+router.post("/logout", passport.authenticate("jwt", { session: false }), userLogout);
+
+//GET USER STATUS
+router.get(
+  "/status/:id",
+  passport.authenticate("jwt", {session: false}),
+  getUserStatus
+)
 
 //SEND OTP
 router.post("/sendOTP", sendOTP);
@@ -50,7 +64,7 @@ router.post(
 
 //GET USER BY ID
 router.get(
-  "/single/:id",
+  "/",
   passport.authenticate("jwt", { session: false }),
   getUser
 );
@@ -145,6 +159,19 @@ router.post(
   '/sync',
   passport.authenticate("jwt", {session: false}),
   syncContacts
+)
+
+//get about profile
+router.get(
+  '/about/:id',
+  passport.authenticate('jwt', {session: false}),
+  getAboutProfile
+)
+//update about profile
+router.put(
+  '/about',
+  passport.authenticate('jwt', {session: false}),
+  updateAboutProfile
 )
 
 module.exports = router;

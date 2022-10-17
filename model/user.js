@@ -98,6 +98,9 @@ const userSchema = new Schema({
   isPremium: {
     type: Boolean,
     default: false
+  },
+  about: {
+    type: String
   }
 });
 

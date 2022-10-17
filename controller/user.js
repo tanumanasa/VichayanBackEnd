@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
 const { getSignedUrl } = require("../utils/s3");
-
+const moment = require('moment');
 //SEND Email
 const { sendGrid } = require("../utils/sendgrid");
 // const sendEmail = require("../utils/sendEmail");
@@ -11,6 +11,7 @@ const { sendGrid } = require("../utils/sendgrid");
 //Models
 const User = require("../model/user");
 const Follow = require('../model/follow');
+const Status = require('../model/status');
 
 //Config
 const keys = require("../config/keys");
@@ -20,24 +21,17 @@ module.exports = {
     try {
       let errors = {};
       const { name, email, password, phoneNumber } = req.body;
-      // const { name, email, password, phoneNumber } = req.body;
       const user = await User.findOne({ email });
       if (user) {
         errors.email = "Email already exist";
         return res.status(400).json(errors);
       }
-      // console.log("1");
 
       let hashedPassword;
-      hashedPassword = await bcrypt.hash(password, 8);
-      // console.log("1");
-      // let { sequence } = await User.findOne()
-      //   .sort({ createdAt: -1 })
-      //   .select("sequence");
-      // sequence = sequence + 1;
+      hashedPassword = await bcrypt.hash(password, 10);
+
       //GENERATE OTP
       const OTP = Math.floor(100000 + Math.random() * 900000);
-      // console.log("2");
 
       const newUser = await new User({
         name,
@@ -51,13 +45,6 @@ module.exports = {
       });
       await newUser.save();
       console.log(newUser);
-      // const body = `Hi Here is OTP ${OTP} for email verification`;
-      // const emailReq = {
-      //   recieverMail: email,
-      //   subject: "Email Verification",
-      //   html: body,
-      // };
-      // await sendGrid.sendMail(emailReq);
 
       //SEND MAIL TO USER FOR EMAIL VERIFICATION
       const message = `
@@ -104,6 +91,10 @@ module.exports = {
         _id: user._id
       };
       user.password = null;
+      const status = new Status({
+        userId: user._id,
+      });
+      await status.save();
       jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
         res.json({
           message: "Email verified successfully",
@@ -138,7 +129,8 @@ module.exports = {
         email,
         _id: user._id
       }
-      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, (err, token) => {
+      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, async (err, token) => {
+        await Status.findOneAndUpdate({ userId: user._id }, { status: 'oniline' });
         res.json({
           message: "User Logged in successfully",
           success: true,
@@ -150,7 +142,15 @@ module.exports = {
       return res.status(400).json({ message: `Error in login ${err.message}` });
     }
   },
-
+  userLogout: async (req, res) => {
+    await Status.findOneAndUpdate({ userId: req.user._id }, { status: 'offline', lastOnline: Date.now() });
+    req.logout();
+    return res.status(200).json({
+      success: true,
+      message: 'User logged out successfully',
+      response: {}
+    })
+  },
   sendOTP: async (req, res, next) => {
     try {
       const { email } = req.body;
@@ -263,7 +263,7 @@ module.exports = {
           .json({ success: false, message: "Invalid old password" });
       }
       let hashedPassword;
-      hashedPassword = await bcrypt.hash(newPassword, 15);
+      hashedPassword = await bcrypt.hash(newPassword, 10);
       user.password = hashedPassword;
       await user.save();
       return res
@@ -375,14 +375,14 @@ module.exports = {
   getAllUser: async (req, res, next) => {
     try {
       const { _id } = req.user;
-      const userId = {_id: {$nin: [_id]} }
+      const userId = { _id: { $nin: [_id] } }
       const queryParams = url.parse(req.url, true).query;
 
       const queryObject = {
         ...userId,
         ...queryParams
-    };
-      const user = await User.find(queryObject, {password:0, otp:0});
+      };
+      const user = await User.find(queryObject, { password: 0, otp: 0 });
       if (!user) {
         return res
           .status(404)
@@ -447,7 +447,7 @@ module.exports = {
       });
     }
   },
-  fetchInterests: async(req, res) => {
+  fetchInterests: async (req, res) => {
     const interests = ["Programming", "Javascript", "Android", "Backend Development", "Frontend Developmen", "Software Engineering"];
     return res.status(200).json({
       success: true,
@@ -480,9 +480,9 @@ module.exports = {
   },
   removeInterests: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {interests} = req.body;
-      const result = await User.findByIdAndUpdate(_id, {$pull: {interests: {$in: interests}}}, {new:true}).select('interests');
+      const { _id } = req.user;
+      const { interests } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $pull: { interests: { $in: interests } } }, { new: true }).select('interests');
       return res.status(200).json({
         success: true,
         message: "Interests removed",
@@ -500,8 +500,8 @@ module.exports = {
   },
   setPremium: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const user = await User.findByIdAndUpdate(_id, {isPremium: true}, {new: true});
+      const { _id } = req.user;
+      const user = await User.findByIdAndUpdate(_id, { isPremium: true }, { new: true });
       return res.status(200).json({
         success: true,
         message: "Set premium successfully",
@@ -509,25 +509,25 @@ module.exports = {
       });
     } catch (error) {
       return res.status(500).json({
-        success:false,
+        success: false,
         message: "Internal server error",
         error: error.message
       });
     }
   },
-  followUser: async(req, res) => {
+  followUser: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {id} = req.params;
+      const { _id } = req.user;
+      const { id } = req.params;
       const user = await User.findById(id);
-      if(!user){
+      if (!user) {
         return res.status(404).json({
-          success:false,
+          success: false,
           message: "User not found",
           response: {}
         })
       }
-      if(!(user.isPremium)){
+      if (!(user.isPremium)) {
         return res.status(400).json({
           success: false,
           message: "User does not have premium",
@@ -552,11 +552,11 @@ module.exports = {
       });
     }
   },
-  syncContacts: async(req, res) => {
+  syncContacts: async (req, res) => {
     try {
-      const {contacts} = req.body;
+      const { contacts } = req.body;
       let present = [], notPresent = [];
-      const existingUsers = await User.find({phoneNumber: {$in: contacts}});
+      const existingUsers = await User.find({ phoneNumber: { $in: contacts } });
       existingUsers.forEach(user => present.push(user.phoneNumber));
       notPresent = contacts.filter(phoneNumber => !present.includes(phoneNumber));
       return res.status(200).json({
@@ -573,6 +573,85 @@ module.exports = {
         message: "Internal server error",
         error: error.message
       });
+    }
+  },
+  getUserStatus: async (req, res) => {
+    try {
+      console.log('Hello')
+      const { id } = req.params;
+      const status = await Status.findOne({ userId: id });
+      console.log(status);
+      if (status.status === 'online') {
+        return res.status(200).josn({
+          success: true,
+          message: "User is online",
+          response: status
+        });
+      } else {
+        const now = moment();
+        const lastOnline = moment(new Date(status.lastOnline));
+        const time = moment.duration(now.diff(lastOnline)).humanize()
+        return res.status(200).json({
+          success: true,
+          message: `User was active ${time} ago`,
+          response: status
+        })
+      }
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      })
+    }
+  },
+  getAboutProfile: async(req, res) => {
+    try {
+      const {id} = req.params;
+      const about = await User.findById(id).select('about');
+      if(!about){
+        return res.status(404).json({
+          success: false,
+          message: 'User not found',
+          response: {}
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'About profile fetched',
+        response: about
+      })
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      })
+    }
+  },
+  updateAboutProfile: async(req, res) => {
+    try {
+      const {_id} = req.user;
+      const {about} = req.body;
+      const result = await User.findByIdAndUpdate({_id}, {about}, {new: true}).select('about');
+      if(!about){
+        return res.status(404).json({
+          success: false,
+          message: 'User not found',
+          response: {}
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'About profile fetched',
+        response: result
+      })
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      })
     }
   }
 };
