@@ -46,25 +46,26 @@ const {
   downloadFile,
   cdnLinkGenerator,
 } = require("../utils/Filehandler");
+const passport = require("passport");
+const Conversation = require("../model/Conversation");
 //add
 
-router.post("/", upload, async (req, res) => {
-  console.log(req.file);
-  try {
-    if (!req.file) {
-      const newMessage = new Message(req.body);
-      const savedMessage = await newMessage.save();
-      res.status(200).json(savedMessage);
-    } else {
-      await uploadFile(req, res);
-    }
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
+// router.post("/", upload, async (req, res) => {
+//   console.log(req.file);
+//   try {
+//     if (!req.file) {
+//       const newMessage = new Message(req.body);
+//       const savedMessage = await newMessage.save();
+//       res.status(200).json(savedMessage);
+//     } else {
+//       await uploadFile(req, res);
+//     }
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// });
 
 //get
-
 router.get("/:conversationId", async (req, res) => {
   try {
     const messages = await Message.find({
@@ -75,5 +76,65 @@ router.get("/:conversationId", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+//send message
+router.post('/', passport.authenticate("jwt", {session: false}), async(req, res) => {
+  try {
+    const {conversationId, text} = req.body;
+    const senderId = req.user._id;
+    const conversation = await Conversation.findOne({_id: conversationId, members: { $in : [senderId]}});
+    if(!conversation){
+      return res.status(400).json({
+        succcess: false,
+        messages: "Conversation not found",
+        response: {}
+      })
+    }
+    const message = new Message({
+      conversationId,
+      senderId,
+      text
+    })
+    await message.save();
+    return res.status(200).json({
+      success: true,
+      message: "Message sent",
+      response: message
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    })
+  }
+});
+
+router.delete('/:id', passport.authenticate("jwt", {session: false}), async(req, res) => {
+  try {
+    const {id} = req.params;
+    const {conversationId} = req.body;
+    const senderId = req.user._id;
+    const message = await Message.findOneAndDelete({_id: id, senderId, conversationId});
+    if(!message){
+      return res.status(400).json({
+        success: false,
+        message: "Message not found",
+        response: {}
+      })
+    }
+    return res.status(200).json({
+      succcess: true,
+      message: "Message deleted successfully",
+      response: message
+    })
+  } catch (error) {
+    return res.status(500).json({
+      succcess: false,
+      message: 'Internal server error',
+      error: error.message
+    })
+  }
+})
 
 module.exports = router;

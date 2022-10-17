@@ -1,16 +1,19 @@
 const router = require("express").Router();
+const mongoose = require("mongoose");
+const passport = require("passport");
 const Conversation = require("../model/Conversation");
 
 //new conv
 
-router.post("/", async (req, res) => {
+router.post("/:id",passport.authenticate("jwt", {session:false}) , async (req, res) => {
+  const senderId = req.user._id;
+  const receiverId = mongoose.Types.ObjectId(req.params.id);
   const newConversation = new Conversation({
-    members: [req.body.senderId, req.body.receiverId],
+    members: [senderId, receiverId],
   });
-
   try {
     const conversation = await Conversation.findOne({
-      members: { $all: [req.params.firstUserId, req.params.secondUserId] },
+      members: { $all: [senderId, receiverId] },
     });
     if (!conversation) {
       const savedConversation = await newConversation.save();

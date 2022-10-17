@@ -80,7 +80,7 @@ router.get(
 router.put("/", passport.authenticate("jwt", { session: false }), updateUser);
 
 //DELTE USER
-router.delete("/", deleteUser);
+router.delete("/", passport.authenticate("jwt", { session: false }), deleteUser);
 
 //UPDATE PROFILE PICTURE
 router.put(
