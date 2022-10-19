@@ -19,6 +19,10 @@ const postSchema = new Schema({
     createdAt:{
         type: Date,
         default: Date.now 
+    },
+    likesCount: {
+        type:Number,
+        default: 0
     }
 }/*,{strict:false}*/)
 

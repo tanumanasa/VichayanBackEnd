@@ -26,9 +26,11 @@ const {
   updateComment,
   getCommentsCountOnPost,
   reportPost,
+  getPostByInterest,
+  getTopPostByInterest,
 } = require("../controller/post");
 
-//CREATE POST
+//CREATE POST 1
 router.post(
   "/",
   passport.authenticate("jwt", { session: false }),
@@ -39,17 +41,17 @@ router.post(
   createPost
 );
 
-//GET POST
+//GET POST 2
 router.get(
   "/single/:id",
   passport.authenticate("jwt", { session: false }),
   getPost
 );
 
-//GET POSTS
+//GET POSTS 3
 router.get("/", passport.authenticate("jwt", { session: false }), getPosts);
 
-//UPDATE POST
+//UPDATE POST 12
 router.put(
   "/:id",
   passport.authenticate("jwt", { session: false }),
@@ -60,42 +62,42 @@ router.put(
   updatePost
 );
 
-//DELETE POST
+//DELETE POST 9
 router.delete(
   "/:id",
   passport.authenticate("jwt", { session: false }),
   deletePost
 );
 
-//LIKE UNLIKE POST
+//LIKE UNLIKE POST 4
 router.get(
   "/react/:id",
   passport.authenticate("jwt", { session: false }),
   likeUnlikePost
 );
 
-//LIKES ON POST
+//LIKES ON POST 6
 router.get(
   "/like/:id",
   passport.authenticate("jwt", { session: false }),
   getLikesOnPost
 );
 
-//COMMENT ON POST
+//COMMENT ON POST 5
 router.post(
   "/comment/:id",
   passport.authenticate("jwt", { session: false }),
   commentOnPost
 );
 
-//GET COMMENT ON POST
+//GET COMMENT ON POST 7 
 router.get(
   "/comment/:id",
   passport.authenticate("jwt", { session: false }),
   getCommentsOnPost
 );
 
-//GET COMMENT COUNT ON POST
+//GET COMMENT COUNT ON POST 15
 router.get(
   "/commentcount/:id",
   passport.authenticate("jwt", { session: false }),
@@ -103,84 +105,98 @@ router.get(
 );
 
 
-//UPDATE COMMENT ON POST
+//UPDATE COMMENT ON POST 16
 router.put(
   "/comment/:id",
   passport.authenticate("jwt", { session: false}),
   updateComment
 )
 
-//DELETE COMMENT
+//DELETE COMMENT 17
 router.delete(
   "/comment/:id",
   passport.authenticate("jwt", { session: false }),
   deleteComment
 );
 
-//MOST LIKED POSTs
+//MOST LIKED POST 8
 router.get("/mostLiked", mostLikedPost);
 
-//GET ALL POST OF A SINGLE TAG
+//GET ALL POST OF A SINGLE TAG 18
 router.get(
   "/tag/:id",
   passport.authenticate("jwt", { session: false }),
   getAllPostOfaTag
 );
 
-//GET ALL POST OF MULTIPLE TAG
+//GET ALL POST OF MULTIPLE TAG 19
 router.post(
   "/tag",
   passport.authenticate("jwt", { session: false }),
   getAllPostofMultipleTags
 );
 
-//GET ALL TAGS
+//GET ALL TAGS 20
 router.get(
   "/user/tag/:id",
   passport.authenticate("jwt", { session: false }),
   getAllTags
 );
 
-//GET ALL POST OF CONNECTIONS
+//GET ALL POST OF CONNECTIONS 21
 router.get(
   "/user",
   passport.authenticate("jwt", { session: false }),
   getAllPostOfConnections
 );
 
-//Reply ON COmment
+//Reply ON Comment 22
 router.post(
   "/reply/:id",
   passport.authenticate("jwt", { session: false }),
   repliesOnComment
 );
 
-//GET reply on a comment
+//GET reply on a comment 23
 router.get(
   "/reply/:id",
   passport.authenticate("jwt", { session: false }),
   getrepliesOnComment
 );
 
-//DELETE reply
+//DELETE reply 24
 router.delete(
   "/reply/:id",
   passport.authenticate("jwt", { session: false }),
   deleteReply
 );
 
-//UPDATE privacy
+//UPDATE privacy 10
 router.put(
   "/privacy/:id",
   passport.authenticate("jwt", { session: false }),
   setPrivacy
 )
 
-//REPORT post
+//REPORT post 11
 router.put(
   '/report/:id',
   passport.authenticate("jwt", {session: false}),
   reportPost
+)
+
+//get posts by interests 13
+router.get(
+  '/interests',
+  passport.authenticate("jwt", {session: false}),
+  getPostByInterest
+)
+
+//get top post by interests 14
+router.get(
+  '/interests/:interest',
+  passport.authenticate("jwt", {session: false}),
+  getTopPostByInterest
 )
 
 module.exports = router;

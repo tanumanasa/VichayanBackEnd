@@ -10,6 +10,8 @@ const Tagpostmapping = require("../model/tagpostmapping");
 const Connection = require("../model/connection");
 const Notification = require("../model/notification");
 const Report = require("../model/report");
+const User = require("../model/user");
+const { Schema } = require("mongoose");
 
 module.exports = {
   createPost: async (req, res) => {
@@ -75,7 +77,8 @@ module.exports = {
       //GET ALL TAGS
       //1- if already exist map post with given id
       //2- else create new tag and then map
-      const { tags = [] } = req.body;
+      let { tags } = req.body;
+      tags = tags.replace(' ', '').split(',');
       for (var k = 0; k < tags.length; k++) {
         const _tag = await Tag.findOne({ tagName: tags[k] });
         if (_tag) {
@@ -293,11 +296,15 @@ module.exports = {
     try {
       const { id } = req.params;
       const { _id } = req.user;
+      const post = await Post.findById(id);
+      const currentLikes = post.likesCount;
       const like = await Like.findOne({
         $and: [{ createdBy: _id }, { postId: id }],
       }).populate('postId');
       if (like) {
         await Like.findByIdAndDelete(like._id);
+        post.likesCount = currentLikes - 1;
+        await post.save();
         return res
           .status(200)
           .json({
@@ -311,10 +318,9 @@ module.exports = {
         createdBy: _id,
       })
       await newLike.save();
-
-      const post = await Post.findById(id);
+      post.likesCount = currentLikes + 1;
+      await post.save();
       const userId = post.createdBy;
-
       const newNotificationRequest = await new Notification({
         type: "postLiked",
         message: "Liked a post",
@@ -385,8 +391,8 @@ module.exports = {
   },
   getCommentsCountOnPost: async (req, res) => {
     try {
-      const {id} = req.params;
-      const count = await Comment.countDocuments({postId: id});
+      const { id } = req.params;
+      const count = await Comment.countDocuments({ postId: id });
       console.log("🚀 ~ file: post.js ~ line 389 ~ getCommentsCountOnPost: ~ count", count)
       return res
         .status(200)
@@ -476,14 +482,14 @@ module.exports = {
   },
   updateComment: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {id} = req.params;
-      const {comment} = req.body;
-      const newComment = await Comment.findByIdAndUpdate(id, {comment}, {new: true});
-      if(!newComment){
+      const { _id } = req.user;
+      const { id } = req.params;
+      const { comment } = req.body;
+      const newComment = await Comment.findByIdAndUpdate(id, { comment }, { new: true });
+      if (!newComment) {
         return res
-        .status(404)
-        .json({ success: false, message: "Invalid id", response: {} });
+          .status(404)
+          .json({ success: false, message: "Invalid id", response: {} });
       }
       return res
         .status(200)
@@ -494,12 +500,12 @@ module.exports = {
         });
     } catch (error) {
       return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal Server Error",
-        error: error.message,
-      });
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal Server Error",
+          error: error.message,
+        });
     }
   },
   mostLikedPost: async (req, res) => {
@@ -518,7 +524,7 @@ module.exports = {
         .status(200)
         .json({
           success: true,
-          message: "Here is the most liked comment",
+          message: "Here is the most liked post",
           response: data,
         });
     } catch (error) {
@@ -759,18 +765,18 @@ module.exports = {
   //report a post
   reportPost: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {id} = req.params;
+      const { _id } = req.user;
+      const { id } = req.params;
       const post = await Post.findById(id);
-      if(!post){
+      if (!post) {
         return res.status(404).json({
           success: false,
           message: "Post not found",
           response: {}
         });
       }
-      const reported = await Report.findOne({postId: id, createdBy: _id});
-      if(reported){
+      const reported = await Report.findOne({ postId: id, createdBy: _id });
+      if (reported) {
         return res.status(400).json({
           success: false,
           message: "You have already reported this post",
@@ -787,7 +793,7 @@ module.exports = {
       // if(post.reportCount >= 10){
       //   console.log("way too many reports, gotta take it down");
       //   await Post.findByIdAndDelete(id);
-        //you can't just delete a post and leave all its related stuff like files and images linked with it, delete them too
+      //you can't just delete a post and leave all its related stuff like files and images linked with it, delete them too
       //   await Report.deleteMany({postId: id});
       //   console.log(postToTakeDown);
       // }
@@ -803,6 +809,73 @@ module.exports = {
         error: error.message
       });
     }
+  },
+  //get post by interests
+  getPostByInterest: async (req, res) => {
+    try {
+      const { _id } = req.user;
+      const { interests } = await User.findById(_id).select('interests');
+      if (interests.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "User does not have any interests",
+          response: {}
+        })
+      }
+      const allPostIds = [];
+      await asyncForEach(interests, async (e) => {
+        const tag = await Tag.findOne({ tagName: e });
+        const temp = (await Tagpostmapping.find({ tagId: ObjectId(tag._id) }).select('postId -_id'));
+        const postIds = [];
+        temp.forEach(e => {
+          postIds.push(e.postId)
+        });
+        allPostIds.push(...postIds);
+      })
+      console.log("🚀", allPostIds)
+      const allPosts = await Post.find({ _id: { $in: allPostIds.map(e => ObjectId(e)) } });
+      console.log("🚀", allPosts)
+      return res.status(200).json({
+        success: true,
+        message: "Posts found with similar interests",
+        response: allPosts
+      });
+    } catch (error) {
+
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  },
+  //get top post by interest
+  getTopPostByInterest: async (req, res) => {
+    try {
+      const { interest } = req.params;
+      const tag = await Tag.findOne({ tagName: interest });
+      if (!tag) {
+        return res.status(404).json({
+          success: false,
+          message: "No post tagged with given interest",
+          response: {}
+        });
+      }
+      const tagPostMapping = await Tagpostmapping.find({ tagId: ObjectId(tag._id) });
+      const posts = await Post.find({ _id: tagPostMapping.map(e => ObjectId(e.postId)) }).sort({likesCount: -1});
+      return res.status(200).json({
+        success: true,
+        message: "Fetched posts with given interest",
+        response: posts
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+
   }
 };
 
