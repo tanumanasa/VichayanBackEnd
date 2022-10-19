@@ -4,7 +4,7 @@ const passport = require('passport')
 const {upload} = require('../utils/s3')
 
 const { createArticle, getArticle, getArticles, 
-    updateArticle, deleteArticle} = require('../controller/article')
+    updateArticle, deleteArticle, likeUnlikeArticle, getTopArticleByInterest} = require('../controller/article')
 
 
 //CREATE ARTICLE
@@ -23,6 +23,12 @@ upload.fields([{name:'images', maxCount:5},{name:"docs", maxCount:5}]), updateAr
 
 //UPDATE ARTICLE
 router.delete('/:id',passport.authenticate('jwt', { session: false }),  deleteArticle)
+
+//LIKE ARTICLE
+router.get('/react/:id', passport.authenticate('jwt', {session:false}), likeUnlikeArticle);
+
+//GET TOP ARTICLE BY INTEREST
+router.get('/interests/:interest', passport.authenticate('jwt', {session:false}), getTopArticleByInterest);
 
 
 module.exports = router
