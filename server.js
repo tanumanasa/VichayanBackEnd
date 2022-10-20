@@ -48,6 +48,7 @@ app.use(
   passport.authenticate("jwt", { session: false }),
   require("./routes/messages")
 );
+app.use('/dev/api/v1/search', require('./routes/search'));
 
 //Catching 404 Error
 app.use((req, res, next) => {

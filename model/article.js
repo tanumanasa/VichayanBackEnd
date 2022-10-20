@@ -21,6 +21,6 @@ const articleSchema = new Schema({
         default: 0
     }
 },{strict:false})
-
+articleSchema.index({text: 'text'});
 
 module.exports = mongoose.model('article', articleSchema)

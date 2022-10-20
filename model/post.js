@@ -24,7 +24,8 @@ const postSchema = new Schema({
         type:Number,
         default: 0
     }
-}/*,{strict:false}*/)
+}/*,{strict:false}*/);
+postSchema.index({text: 'text'});
 
 module.exports = mongoose.model('post', postSchema)
 
