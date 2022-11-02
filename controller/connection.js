@@ -33,7 +33,7 @@ const sendConnectionRequest = async (req, res, next) => {
         await newConnectionRequest.save()
 
         const newNotificationRequest = await new Notification({
-            type: "ConnectionRecieved",
+            type: "connectionRecieved",
             message: "Send you connection Request",
             userId: ObjectId(id),
             createdBy: ObjectId(senderId)
@@ -59,7 +59,7 @@ const acceptConnectionRequest = async (req, res, next) => {
             await connectionRequest.save()
 
             const newNotificationRequest = await new Notification({
-                type: "ConnectionAccept",
+                type: "connectionAccepted",
                 message: "Accepted your connection Request",
                 userId: ObjectId(id),
                 createdBy: ObjectId(receiverId)

@@ -12,6 +12,7 @@ const { sendGrid } = require("../utils/sendgrid");
 const User = require("../model/user");
 const Follow = require('../model/follow');
 const Status = require('../model/status');
+const Notification = require('../model/notification');
 
 //Config
 const keys = require("../config/keys");
@@ -129,7 +130,7 @@ module.exports = {
         email,
         _id: user._id
       }
-      jwt.sign(payload, keys.secretKey, { expiresIn: 7200 }, async (err, token) => {
+      jwt.sign(payload, keys.secretKey, { expiresIn: '10d'/*7200*/ }, async (err, token) => {
         await Status.findOneAndUpdate({ userId: user._id }, { status: 'oniline' });
         res.json({
           message: "User Logged in successfully",
@@ -517,8 +518,8 @@ module.exports = {
   },
   followUser: async (req, res) => {
     try {
-      const { _id } = req.user;
-      const { id } = req.params;
+      const { _id } = req.user; //sender
+      const { id } = req.params; //reciever
       const user = await User.findById(id);
       if (!user) {
         return res.status(404).json({
@@ -539,6 +540,12 @@ module.exports = {
         createdBy: _id
       });
       await follow.save();
+      const newNotification = await Notification.create({
+        userId: id,
+        createdBy: _id,
+        type: 'userFollowed',
+        message: 'A user has followed your account'
+      });
       return res.status(200).json({
         success: true,
         message: "Followed user successfully",

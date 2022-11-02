@@ -5,7 +5,7 @@ const { Schema } = mongoose
 const notificationSchema = new Schema({
     type: {
         type: String,
-        enum: ["ConnectionRecieved", "ConnectionAccept", "postCreated", "postLiked", "postCommented", "articleLiked"],
+        enum: ["connectionRecieved", "connectionAccepted", "postCreated", "postLiked", "postCommented", "articleLiked", "userFollowed"],
         required: true,
     },
     message: {
