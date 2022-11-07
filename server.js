@@ -39,6 +39,7 @@ app.use("/dev/api/v1/article", require("./routes/article"));
 app.use("/dev/api/v1/connection", require("./routes/connection"));
 app.use("/dev/api/v1/notification", require("./routes/notification"));
 app.use("/dev/api/v1/journal", require('./routes/journal'));
+app.use('/dev/api/v1/story', require('./routes/story'));
 app.use(
   "/dev/api/v1/conversations",
   passport.authenticate("jwt", { session: false }),
