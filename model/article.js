@@ -7,7 +7,7 @@ const articleSchema = new Schema({
         type: String
     },
     images: [],
-    link: [],
+    headline: String,
     createdBy:{
         type: Schema.Types.ObjectId,
         ref: 'user'

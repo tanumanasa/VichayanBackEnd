@@ -93,7 +93,8 @@ router.post('/', passport.authenticate("jwt", {session: false}), async(req, res)
     const message = new Message({
       conversationId,
       senderId,
-      text
+      text,
+      status: sent
     })
     await message.save();
     return res.status(200).json({
@@ -135,6 +136,63 @@ router.delete('/:id', passport.authenticate("jwt", {session: false}), async(req,
       error: error.message
     })
   }
-})
+});
+
+
+router.put('/received/:messageId', passport.authenticate('jwt', {session: false}), async(req, res) => {
+  try {
+    const {id} = req.user;
+    const {messageId} = req.params;
+    const {conversationId} = req.body;
+    const message = await Message.findOneAndUpdate({_id: messageId, conversationId}, {status: 'received'}, {new: true});
+    if(!message){
+      return res.status(400).json({
+        success: false,
+        message: 'No message found with provided meessageId',
+        response: {}
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Message seen successfully',
+      respnose: message
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.put('/seen/:messageId', passport.authenticate('jwt', {session: false}), async(req, res) => {
+  try {
+    const {id} = req.user;
+    const {messageId} = req.params;
+    const {conversationId} = req.body;
+    const message = await Message.findOneAndUpdate({_id: messageId, conversationId}, {status: 'seen'}, {new: true});
+    if(!message){
+      return res.status(400).json({
+        success: false,
+        message: 'No message found with provided meessageId',
+        response: {}
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Message received successfully',
+      respnose: message
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+
 
 module.exports = router;

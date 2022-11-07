@@ -22,6 +22,9 @@ const MessageSchema = new mongoose.Schema(
     size: {
       type: Number,
     },
+    status: {
+      type: String
+    }
   },
   { timestamps: true }
 );

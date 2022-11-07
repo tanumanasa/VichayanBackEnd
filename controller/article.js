@@ -13,7 +13,7 @@ module.exports = {
         try {
             const { id } = req.user
             let images = []
-            if (req.file) {
+            if (req.files) {
                 if (req.files.images.length > 0) {
                     for (var i = 0; i < req.files.images.length; i++) {
                         let url = getSignedUrl(req.files.images[i].key)
@@ -26,11 +26,12 @@ module.exports = {
                     }
                 }
             }
-            const { text, link } = req.body
+            console.log(images);
+            const { text, headline } = req.body
             const newArticle = await new Article({
                 text,
                 images,
-                link,
+                headline,
                 createdBy: id
             })
             await newArticle.save();
@@ -108,7 +109,7 @@ module.exports = {
                     })
                 }
             }
-            const { text, link } = req.body
+            const { text, headline } = req.body
             const article = await Article.findById(id)
             if (!article) {
                 return res.status(404).json({ success: false, message: "Invalid id, article not found", response: {} })
@@ -119,8 +120,8 @@ module.exports = {
             if (images.length > 0) {
                 article.images = images
             }
-            if (link) {
-                article.link = link
+            if (headline) {
+                article.headline = headline
             }
             await article.save()
             return res.status(200).json({ success: true, message: "Article updated successfully", response: article })
