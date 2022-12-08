@@ -234,6 +234,80 @@ module.exports = {
       });
     }
   },
+
+  forgotPassword: async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res
+          .status(200)
+          .json({ success: false, message: "Fields are empty" });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Email does not exist" });
+      }
+      
+      console.log("****************", user)
+      user.isEmailVerified = true;
+      user.isVerified = true;
+      const OTP = Math.floor(100000 + Math.random() * 900000);
+      //SEND MAIL TO USER FOR Password Reset
+      const message = `
+        <h1>Password Reset </h1>
+        <p>Please reset your password</p>
+        <p>Here is OTP:  ${OTP} for verification</p>
+      `;
+
+      await sendGrid({
+        to: email,
+        subject: "Password Reset",
+        text: message,
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  resetPassword: async (req, res, next) => {
+    try {
+      const { _id,token } = req.user;
+      const { password, conformPassword } = req.body;
+      const user = await User.findById(_id);
+      const isCorrect = await bcrypt.compare(password, conformPassword);
+      if (!isCorrect) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid password" });
+      }
+
+      // jwt.verify(token, keys.secretKey, (err, decode) => decode !== undefined ?  decode : err)
+
+      let hashedPassword;
+      hashedPassword = await bcrypt.hash(password, 15);
+      user.password = hashedPassword;
+      await user.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Password reset successfully" });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
   deleteUser: async (req, res, next) => {
     try {
       const { _id } = req.user;
@@ -375,14 +449,14 @@ module.exports = {
   getAllUser: async (req, res, next) => {
     try {
       const { _id } = req.user;
-      const userId = {_id: {$nin: [_id]} }
+      const userId = { _id: { $nin: [_id] } }
       const queryParams = url.parse(req.url, true).query;
 
       const queryObject = {
         ...userId,
         ...queryParams
-    };
-      const user = await User.find(queryObject, {password:0, otp:0});
+      };
+      const user = await User.find(queryObject, { password: 0, otp: 0 });
       if (!user) {
         return res
           .status(404)
@@ -447,7 +521,7 @@ module.exports = {
       });
     }
   },
-  fetchInterests: async(req, res) => {
+  fetchInterests: async (req, res) => {
     const interests = ["Programming", "Javascript", "Android", "Backend Development", "Frontend Developmen", "Software Engineering"];
     return res.status(200).json({
       success: true,
@@ -480,9 +554,9 @@ module.exports = {
   },
   removeInterests: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {interests} = req.body;
-      const result = await User.findByIdAndUpdate(_id, {$pull: {interests: {$in: interests}}}, {new:true}).select('interests');
+      const { _id } = req.user;
+      const { interests } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $pull: { interests: { $in: interests } } }, { new: true }).select('interests');
       return res.status(200).json({
         success: true,
         message: "Interests removed",
@@ -500,8 +574,8 @@ module.exports = {
   },
   setPremium: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const user = await User.findByIdAndUpdate(_id, {isPremium: true}, {new: true});
+      const { _id } = req.user;
+      const user = await User.findByIdAndUpdate(_id, { isPremium: true }, { new: true });
       return res.status(200).json({
         success: true,
         message: "Set premium successfully",
@@ -509,25 +583,25 @@ module.exports = {
       });
     } catch (error) {
       return res.status(500).json({
-        success:false,
+        success: false,
         message: "Internal server error",
         error: error.message
       });
     }
   },
-  followUser: async(req, res) => {
+  followUser: async (req, res) => {
     try {
-      const {_id} = req.user;
-      const {id} = req.params;
+      const { _id } = req.user;
+      const { id } = req.params;
       const user = await User.findById(id);
-      if(!user){
+      if (!user) {
         return res.status(404).json({
-          success:false,
+          success: false,
           message: "User not found",
           response: {}
         })
       }
-      if(!(user.isPremium)){
+      if (!(user.isPremium)) {
         return res.status(400).json({
           success: false,
           message: "User does not have premium",
@@ -552,11 +626,11 @@ module.exports = {
       });
     }
   },
-  syncContacts: async(req, res) => {
+  syncContacts: async (req, res) => {
     try {
-      const {contacts} = req.body;
+      const { contacts } = req.body;
       let present = [], notPresent = [];
-      const existingUsers = await User.find({phoneNumber: {$in: contacts}});
+      const existingUsers = await User.find({ phoneNumber: { $in: contacts } });
       existingUsers.forEach(user => present.push(user.phoneNumber));
       notPresent = contacts.filter(phoneNumber => !present.includes(phoneNumber));
       return res.status(200).json({

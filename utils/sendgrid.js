@@ -33,7 +33,7 @@ const sendGrid = async (options) => {
         ],
     };
 
-    console.log(JSON.stringify(params));
+    console.log("send grid--->",JSON.stringify(params));
 
     //creating promise for sending Email
 

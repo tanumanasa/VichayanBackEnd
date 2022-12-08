@@ -24,6 +24,8 @@ const {
   followUser,
   fetchInterests,
   syncContacts,
+  forgotPassword,
+  resetPassword,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -40,6 +42,14 @@ router.post("/sendOTP", sendOTP);
 
 //VERIFY OTP
 router.post("/verifyOTP", verifyOTP);
+
+//Forgot password
+router.put("/forgotPassword", forgotPassword);
+
+//Forgot password
+router.put("/forgotPassword",
+ passport.authenticate("jwt", { session: false }),
+  resetPassword);
 
 //UPDATE PASSWORD
 router.post(

@@ -366,6 +366,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const comments = await Comment.find({ postId: id });
+      console.log("comment ----> ",comments,id)
       return res
         .status(200)
         .json({
@@ -409,6 +410,7 @@ module.exports = {
   },
   commentOnPost: async (req, res) => {
     try {
+      console.log("***?",req.body)
       const { id } = req.params;
       const { _id } = req.user;
       const { comment } = req.body;
