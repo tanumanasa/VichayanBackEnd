@@ -648,5 +648,127 @@ module.exports = {
         error: error.message
       });
     }
-  }
+  },
+  addEducationOfUser: async (req, res) => {
+    try {
+      console.log("*******???",req.body)
+      const { _id } = req.user;
+      const { education } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { education: { $each: education } } }, { new: true }).select('education');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Education added",
+          response: result
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+
+  addExperienceOfUser: async (req, res) => {
+    try {
+      console.log("*******???",req.body)
+      const { _id } = req.user;
+      const { experience } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { experience: { $each: experience } } }, { new: true }).select('experience');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Experience added",
+          response: result
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  addAboutOfUser: async (req, res) => {
+    try {
+      console.log("*******???",req.body)
+      const { _id } = req.user;
+      const { about } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { about: { $each: about } } }, { new: true }).select('about');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "about added",
+          response: result
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  getAboutOfUser: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const user = await User.findById(ObjectId(id));
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found", response: {} });
+      }
+      return res
+        .status(200)
+        .json({ success: true, message: "User found", response: user.about });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+  updateAboutUser: async (req, res, next) => {
+    try {
+      const {_id} = req.user;
+      // const {id} = req.params;
+      const {id, about} = req.body;
+      const newAbout = await User.findByIdAndUpdate(id, {about}, {new: true});
+      if(!newAbout){
+        return res
+        .status(404)
+        .json({ success: false, message: "Invalid id", response: {} });
+      }
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "About updated successfully",
+          response: newAbout,
+        });
+    } catch (error) {
+      return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
 };

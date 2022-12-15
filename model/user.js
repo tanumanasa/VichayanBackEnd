@@ -91,6 +91,15 @@ const userSchema = new Schema({
   interests: [{
     type: String
   }],
+  education: [{
+    type: String
+  }],
+  experience: [{
+    type: String
+  }],
+  about: [{
+    type: String
+  }],
   isAdmin: {
     type: Boolean,
     default: false,

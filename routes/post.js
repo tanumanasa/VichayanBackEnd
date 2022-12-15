@@ -35,6 +35,7 @@ router.post(
   upload.fields([
     { name: "images", maxCount: 5 },
     { name: "docs", maxCount: 5 },
+    { name: "videos", maxCount: 5 },
   ]),
   createPost
 );

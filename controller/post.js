@@ -17,6 +17,8 @@ module.exports = {
       const { _id } = req.user;
       let images = [];
       let docs = [];
+      let videos = [];
+      console.log("****req.files",req.files)
       if (req.files.images && req.files.images.length > 0) {
         for (var i = 0; i < req.files.images.length; i++) {
           let url = getSignedUrl(req.files.images[i].key);
@@ -39,11 +41,23 @@ module.exports = {
           });
         }
       }
+      if (req.files.videos && req.files.videos.length > 0) {
+        for (var j = 0; j < req.files.videos.length; j++) {
+          let url = getSignedUrl(req.files.videos[j].key);
+          videos.push({
+            id: uuidv4(),
+            originalname: req.files.videos[j].originalname,
+            url: url,
+            key: req.files.videos[j].key,
+          });
+        }
+      }
       const { text, websitesLink, privacy } = req.body;
       const post = new Post({
         text,
         images,
         docs,
+        videos,
         privacy,
         websitesLink,
         createdBy: _id,
