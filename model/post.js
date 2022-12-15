@@ -6,6 +6,7 @@ const postSchema = new Schema({
         type: String
     },
     images: [],
+    videos: [],
     docs: [],
     websitesLink:[],
     privacy:{

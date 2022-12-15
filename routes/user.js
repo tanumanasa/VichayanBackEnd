@@ -26,6 +26,11 @@ const {
   syncContacts,
   forgotPassword,
   resetPassword,
+  addEducationOfUser,
+  addExperienceOfUser,
+  addAboutOfUser,
+  getAboutOfUser,
+  updateAboutUser,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -135,6 +140,43 @@ router.delete(
   passport.authenticate("jwt", {session:false}),
   removeInterests
 )
+
+//add Education
+router.post(
+  "/educations",
+  passport.authenticate("jwt", {session:false}),
+  addEducationOfUser
+)
+
+//add Experience
+router.post(
+  "/experiences",
+  passport.authenticate("jwt", {session:false}),
+  addExperienceOfUser
+)
+
+//add About
+router.post(
+  "/about",
+  passport.authenticate("jwt", {session:false}),
+  addAboutOfUser
+)
+
+//add About
+router.get(
+  "/about",
+  passport.authenticate("jwt", {session:false}),
+  getAboutOfUser
+)
+
+//UPDATE COMMENT ON POST
+router.put(
+  "/about",
+  passport.authenticate("jwt", { session: false}),
+  updateAboutUser
+)
+
+
 
 //set premium
 router.put(
