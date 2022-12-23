@@ -698,6 +698,7 @@ module.exports = {
         })
     }
   },
+
   addAboutOfUser: async (req, res) => {
     try {
       console.log("*******???",req.body)
@@ -758,6 +759,79 @@ module.exports = {
         .json({
           success: true,
           message: "About updated successfully",
+          response: newAbout,
+        });
+    } catch (error) {
+      return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  addSkillsOfUser: async (req, res) => {
+    try {
+      console.log("*******???",req.body)
+      const { _id } = req.user;
+      const { skills } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { skills: { $each: skills } } }, { new: true }).select('skills');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "skills added",
+          response: result
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  getSkillsOfUser: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const user = await User.findById(ObjectId(id));
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found", response: {} });
+      }
+      return res
+        .status(200)
+        .json({ success: true, message: "User found", response: user.skills });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+  updateSkillsUser: async (req, res, next) => {
+    try {
+      const {_id} = req.user;
+      // const {id} = req.params;
+      const {id, skills} = req.body;
+      const newAbout = await User.findByIdAndUpdate(id, {skills}, {new: true});
+      if(!newAbout){
+        return res
+        .status(404)
+        .json({ success: false, message: "Invalid id", response: {} });
+      }
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "skills updated successfully",
           response: newAbout,
         });
     } catch (error) {
