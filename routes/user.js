@@ -30,7 +30,6 @@ const {
   addExperienceOfUser,
   addAboutOfUser,
   getAboutOfUser,
-  updateAboutUser,
   addSkillsOfUser,
   getSkillsOfUser,
   updateSkillsUser,
@@ -170,12 +169,6 @@ router.get(
   "/about",
   passport.authenticate("jwt", {session:false}),
   getAboutOfUser
-)
-
-router.put(
-  "/about",
-  passport.authenticate("jwt", { session: false}),
-  updateAboutUser
 )
 
 // Skills

@@ -97,9 +97,9 @@ const userSchema = new Schema({
   experience: [{
     type: String
   }],
-  about: [{
-    type: String
-  }],
+  about: {
+    type: String,
+  },
   isAdmin: {
     type: Boolean,
     default: false,

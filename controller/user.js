@@ -651,7 +651,6 @@ module.exports = {
   },
   addEducationOfUser: async (req, res) => {
     try {
-      console.log("*******???",req.body)
       const { _id } = req.user;
       const { education } = req.body;
       const result = await User.findByIdAndUpdate(_id, { $addToSet: { education: { $each: education } } }, { new: true }).select('education');
@@ -701,16 +700,22 @@ module.exports = {
 
   addAboutOfUser: async (req, res) => {
     try {
-      console.log("*******???",req.body)
       const { _id } = req.user;
       const { about } = req.body;
-      const result = await User.findByIdAndUpdate(_id, { $addToSet: { about: { $each: about } } }, { new: true }).select('about');
+      const user = await User.findById(_id);
+      if(!user){
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid user" });
+      }
+      user.about = about;
+      await user.save();
       return res
         .status(200)
         .json({
           success: true,
           message: "about added",
-          response: result
+          response: user.about
         });
 
     } catch (error) {
@@ -723,6 +728,7 @@ module.exports = {
         })
     }
   },
+  
   getAboutOfUser: async (req, res) => {
     try {
       const { id } = req.user;
@@ -734,37 +740,9 @@ module.exports = {
       }
       return res
         .status(200)
-        .json({ success: true, message: "User found", response: user.about });
+        .json({ success: true, message: "About user", response: user.about});
     } catch (error) {
       return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-        error: error.message,
-      });
-    }
-  },
-  updateAboutUser: async (req, res, next) => {
-    try {
-      const {_id} = req.user;
-      // const {id} = req.params;
-      const {id, about} = req.body;
-      const newAbout = await User.findByIdAndUpdate(id, {about}, {new: true});
-      if(!newAbout){
-        return res
-        .status(404)
-        .json({ success: false, message: "Invalid id", response: {} });
-      }
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "About updated successfully",
-          response: newAbout,
-        });
-    } catch (error) {
-      return res
-      .status(500)
-      .json({
         success: false,
         message: "Internal Server Error",
         error: error.message,
@@ -774,7 +752,6 @@ module.exports = {
 
   addSkillsOfUser: async (req, res) => {
     try {
-      console.log("*******???",req.body)
       const { _id } = req.user;
       const { skills } = req.body;
       const result = await User.findByIdAndUpdate(_id, { $addToSet: { skills: { $each: skills } } }, { new: true }).select('skills');
