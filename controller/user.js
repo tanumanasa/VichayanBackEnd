@@ -651,7 +651,6 @@ module.exports = {
   },
   addEducationOfUser: async (req, res) => {
     try {
-      console.log("*******???",req.body)
       const { _id } = req.user;
       const { education } = req.body;
       const result = await User.findByIdAndUpdate(_id, { $addToSet: { education: { $each: education } } }, { new: true }).select('education');
@@ -698,17 +697,69 @@ module.exports = {
         })
     }
   },
+
   addAboutOfUser: async (req, res) => {
     try {
-      console.log("*******???",req.body)
       const { _id } = req.user;
       const { about } = req.body;
-      const result = await User.findByIdAndUpdate(_id, { $addToSet: { about: { $each: about } } }, { new: true }).select('about');
+      const user = await User.findById(_id);
+      if(!user){
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid user" });
+      }
+      user.about = about;
+      await user.save();
       return res
         .status(200)
         .json({
           success: true,
           message: "about added",
+          response: user.about
+        });
+
+    } catch (error) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Internal server error",
+          error: error.message
+        })
+    }
+  },
+  
+  getAboutOfUser: async (req, res) => {
+    try {
+      const { id } = req.user;
+      const user = await User.findById(ObjectId(id));
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found", response: {} });
+      }
+      return res
+        .status(200)
+        .json({ success: true, message: "About user", response: user.about});
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  addSkillsOfUser: async (req, res) => {
+    try {
+      const { _id } = req.user;
+      const { skills } = req.body;
+      const result = await User.findByIdAndUpdate(_id, { $addToSet: { skills: { $each: skills } } }, { new: true }).select('skills');
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "skills added",
           response: result
         });
 
@@ -722,7 +773,7 @@ module.exports = {
         })
     }
   },
-  getAboutOfUser: async (req, res) => {
+  getSkillsOfUser: async (req, res) => {
     try {
       const { id } = req.user;
       const user = await User.findById(ObjectId(id));
@@ -733,7 +784,7 @@ module.exports = {
       }
       return res
         .status(200)
-        .json({ success: true, message: "User found", response: user.about });
+        .json({ success: true, message: "User found", response: user.skills });
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -742,12 +793,12 @@ module.exports = {
       });
     }
   },
-  updateAboutUser: async (req, res, next) => {
+  updateSkillsUser: async (req, res, next) => {
     try {
       const {_id} = req.user;
       // const {id} = req.params;
-      const {id, about} = req.body;
-      const newAbout = await User.findByIdAndUpdate(id, {about}, {new: true});
+      const {id, skills} = req.body;
+      const newAbout = await User.findByIdAndUpdate(id, {skills}, {new: true});
       if(!newAbout){
         return res
         .status(404)
@@ -757,7 +808,7 @@ module.exports = {
         .status(200)
         .json({
           success: true,
-          message: "About updated successfully",
+          message: "skills updated successfully",
           response: newAbout,
         });
     } catch (error) {

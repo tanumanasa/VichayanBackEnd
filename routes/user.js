@@ -30,7 +30,9 @@ const {
   addExperienceOfUser,
   addAboutOfUser,
   getAboutOfUser,
-  updateAboutUser,
+  addSkillsOfUser,
+  getSkillsOfUser,
+  updateSkillsUser,
 } = require("../controller/user");
 
 //USER REGISTER
@@ -169,12 +171,27 @@ router.get(
   getAboutOfUser
 )
 
-//UPDATE COMMENT ON POST
-router.put(
-  "/about",
-  passport.authenticate("jwt", { session: false}),
-  updateAboutUser
+// Skills
+router.get(
+  "/skills",
+  passport.authenticate("jwt", {session:false}),
+  getSkillsOfUser
 )
+
+router.post(
+  "/skills",
+  passport.authenticate("jwt", {session:false}),
+  addSkillsOfUser
+)
+
+router.put(
+  "/skills",
+  passport.authenticate("jwt", {session:false}),
+  updateSkillsUser
+)
+
+//UPDATE COMMENT ON POST
+
 
 
 

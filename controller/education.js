@@ -14,7 +14,7 @@ module.exports = {
                 return res.status(400).json({ success: false, message: "Invalid Request, unauthorized", response: {} })
             }
             if (school) {
-                education.text = text
+                education.school = school
             }
             if(degree){
                 education.degree = degree
