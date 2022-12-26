@@ -428,7 +428,8 @@ module.exports = {
   },
   getUser: async (req, res, next) => {
     try {
-      const { id } = req.user;
+      // const { id } = req.user;
+      const { id } = req.params;
       const user = await User.findById(ObjectId(id));
       if (!user) {
         return res
