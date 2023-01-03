@@ -51,8 +51,8 @@ const acceptConnectionRequest = async (req, res, next) => {
     try {
         const { id } = req.params
         const receiverId = req.user._id
-
         const connectionRequest = await Connection.findOne({_id: id, status: 'sent'})
+        // const connectionRequest = await Connection.findOne({_id: id})
         //Validate connectionRequest
         if (connectionRequest && connectionRequest.recievedBy.toString() == receiverId.toString()) {
             connectionRequest.status = 'accepted'

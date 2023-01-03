@@ -5,12 +5,12 @@ const Conversation = require("../model/Conversation");
 
 router.post("/", async (req, res) => {
   const newConversation = new Conversation({
-    members: [req.body.senderId, req.body.receiverId],
+    members: [req.body.senderId, req.body.receiverId,],
   });
-
+  // [req.params.firstUserId, req.params.secondUserId]
   try {
     const conversation = await Conversation.findOne({
-      members: { $all: [req.params.firstUserId, req.params.secondUserId] },
+      members: { $all: [req.body.senderId, req.body.receiverId] },
     });
     if (!conversation) {
       const savedConversation = await newConversation.save();
@@ -20,10 +20,18 @@ router.post("/", async (req, res) => {
         response: savedConversation,
       });
     } else {
-      res.status(409).json({
-        message: "Conversation already exists !!",
-        success: false,
-      });
+      if (conversation._id) {
+        res.status(200).json({
+          message: "Conversation already exists !!",
+          success: true,
+          response: conversation
+        });
+      } else {
+        res.status(409).json({
+          message: "error",
+          success: false,
+        });
+      }
     }
   } catch (err) {
     res.status(500).json(err);

@@ -1,4 +1,5 @@
 const express = require("express");
+const passport = require("passport");
 const router = express.Router();
 
 const {
@@ -6,6 +7,6 @@ const {
   } = require("../controller/chat");
 
 //USER REGISTER
-router.post("/create", chatCreation);
+router.post("/create", passport.authenticate("jwt", { session: false }), chatCreation);
 
 module.exports = router;
