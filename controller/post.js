@@ -380,7 +380,6 @@ module.exports = {
     try {
       const { id } = req.params;
       const comments = await Comment.find({ postId: id });
-      console.log("comment ----> ",comments,id)
       return res
         .status(200)
         .json({
@@ -702,7 +701,6 @@ module.exports = {
       const newReply = await new Reply({
         reply,
         commentId: id,
-
         createdBy: _id,
       });
       await newReply.save();
