@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html/VichayanBackEnd/
+hooks:
+  BeforeInstall:
+    - location: scripts/remove-old-revision.sh
+      timeout: 300
+      runas: ubuntu
+  AfterInstall:
+    - location: scripts/removefiles.sh
+      timeout: 300
+      runas: ubuntu
+  ApplicationStart:
+    - location: scripts/deployment.sh
+      timeout: 300
+      runas: ubuntu
