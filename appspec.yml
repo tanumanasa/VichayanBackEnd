@@ -7,12 +7,12 @@ hooks:
   BeforeInstall:
     - location: scripts/remove-old-revision.sh
       timeout: 300
-      runas: ubuntu
+      runas: root
   AfterInstall:
     - location: scripts/removefiles.sh
       timeout: 300
-      runas: ubuntu
+      runas: root
   ApplicationStart:
     - location: scripts/deployment.sh
       timeout: 300
-      runas: ubuntu
+      runas: root
