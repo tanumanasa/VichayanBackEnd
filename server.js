@@ -69,7 +69,7 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 mongoose
-  .connect("mongodb://10.0.1.156:27017/vichayan", {
+  .connect("mongodb+srv://madhusmita_123:5fiVrKsOKBIGJsKe@cluster0.cpbhduk.mongodb.net/Vichayan", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
@@ -110,3 +110,4 @@ mongoose
 // mongodb://127.0.0.1:27017/servimate
 
 // "start": "pm2-runtime start ecosystem.config.js --env production"
+
