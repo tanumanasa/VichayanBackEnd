@@ -1,2 +1,2 @@
 
-run the server-npx nodemon derver.js
+run the server-npx nodemon server.js
